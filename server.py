@@ -8,12 +8,13 @@ from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, static_folder='.')
-JWT_SECRET = 'blog-secret-' + str(int(time.time()))
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, static_folder=BASE_DIR)
+JWT_SECRET = 'blog-secret-2024'
+DATA_DIR = os.path.join(BASE_DIR, 'data')
 USERS_FILE = os.path.join(DATA_DIR, 'users.json')
 ARTICLES_FILE = os.path.join(DATA_DIR, 'articles.json')
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
 OWNER_EMAIL = '3615744342@qq.com'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'webm', 'mov', 'avi'}
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024
