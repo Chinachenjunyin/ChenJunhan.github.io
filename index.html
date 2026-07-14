@@ -1284,8 +1284,8 @@ function showProfile() {
   const user = currentUser;
   if (!user) return;
   const avatarImg = user.avatar
-    ? `<img class="avatar-lg" src="${escapeHtml(user.avatar)}" alt="">`
-    : '<div class="avatar-lg" style="display:inline-block;background:var(--glass-bg);border:3px solid rgba(201,165,125,0.5);border-radius:50%;line-height:60px;color:var(--text-muted);font-size:20px">?</div>';
+    ? `<img class="avatar-lg" id="avatarPreview" src="${escapeHtml(user.avatar)}" alt="">`
+    : '<div class="avatar-lg" id="avatarPreview" style="display:inline-block;background:var(--glass-bg);border:3px solid rgba(201,165,125,0.5);border-radius:50%;line-height:60px;color:var(--text-muted);font-size:20px">?</div>';
   m.innerHTML = `
     <h2>个人信息</h2>
     <div class="error-msg" id="profileError"></div>
@@ -1298,8 +1298,16 @@ function showProfile() {
       <input type="text" id="profileUsername" value="${escapeHtml(user.username)}">
     </div>
     <div class="form-group">
+      <label>上传头像</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="file" id="avatarFileInput" accept="image/*" onchange="uploadAvatar(event)" style="display:none">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('avatarFileInput').click()">选择图片</button>
+        <span id="avatarUploadStatus" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+    </div>
+    <div class="form-group">
       <label>头像 URL</label>
-      <input type="text" id="profileAvatar" value="${escapeHtml(user.avatar || '')}" placeholder="粘贴图片URL或先上传到素材">
+      <input type="text" id="profileAvatar" value="${escapeHtml(user.avatar || '')}" placeholder="也可直接粘贴图片URL" oninput="previewAvatarUrl(this.value)">
     </div>
     <div class="form-actions" style="margin-bottom:8px">
       <button class="btn btn-outline btn-sm" onclick="closeAuth()">取消</button>
@@ -1326,6 +1334,39 @@ function showProfile() {
     </div>
   `;
   document.getElementById('authModal').classList.add('active');
+}
+
+async function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('avatarUploadStatus');
+  statusEl.textContent = '上传中...';
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const resp = await fetch(API + '/upload', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }, body: formData
+    });
+    const data = await resp.json();
+    if (!resp.ok) { statusEl.textContent = data.error; return; }
+    document.getElementById('profileAvatar').value = data.url;
+    previewAvatarUrl(data.url);
+    statusEl.textContent = '上传成功';
+  } catch (e) { statusEl.textContent = '上传失败'; }
+}
+
+function previewAvatarUrl(url) {
+  const preview = document.getElementById('avatarPreview');
+  if (!preview) return;
+  if (url && preview.tagName === 'DIV') {
+    const img = document.createElement('img');
+    img.className = 'avatar-lg';
+    img.id = 'avatarPreview';
+    img.src = url;
+    preview.parentNode.replaceChild(img, preview);
+  } else if (url && preview.tagName === 'IMG') {
+    preview.src = url;
+  }
 }
 
 async function saveProfile() {
