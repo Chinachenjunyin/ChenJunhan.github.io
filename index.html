@@ -808,6 +808,45 @@
     cursor: pointer;
     text-decoration: none;
   }
+
+  .comment-replies {
+    margin-top: 8px;
+    padding-left: 28px;
+    border-left: 2px solid var(--glass-border);
+  }
+
+  .reply-item {
+    margin-bottom: 6px;
+    padding: 10px 14px;
+  }
+
+  .reply-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    align-items: flex-end;
+  }
+
+  .reply-form textarea {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    color: var(--text);
+    resize: vertical;
+    min-height: 36px;
+    max-height: 100px;
+  }
+
+  .reply-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
 </style>
 </head>
 <body>
@@ -1276,6 +1315,7 @@ async function showPostById(id) {
 
 async function loadComments(articleId) {
   const el = document.getElementById('commentList');
+  window._currentArticleId = articleId;
   try {
     const resp = await fetch(API + '/articles/' + articleId + '/comments');
     const comments = await resp.json();
@@ -1283,22 +1323,90 @@ async function loadComments(articleId) {
       el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:16px">暂无评论</p>';
       return;
     }
-    el.innerHTML = comments.map(c => {
-      const avatarHtml = c.avatar ? '<img class="avatar" src="' + escapeHtml(c.avatar) + '" alt="" style="width:22px;height:22px">' : '';
-      const canDelete = currentUser && (currentUser.id === c.authorId || currentUser.isOwner);
-      return `
-        <div class="comment-item">
-          <div class="comment-header">
-            ${avatarHtml}
-            <span class="comment-username">${escapeHtml(c.username)}</span>
-            <span class="comment-time">${formatDate(c.createdAt)}</span>
-            ${canDelete ? '<button class="comment-delete" onclick="deleteComment(\'' + articleId + '\', \'' + c.id + '\')">删除</button>' : ''}
-          </div>
-          <div class="comment-content">${escapeHtml(c.content)}</div>
-        </div>
-      `;
+    const parents = comments.filter(c => !c.parentId);
+    const replies = comments.filter(c => c.parentId);
+    el.innerHTML = parents.map(c => {
+      const childReplies = replies.filter(r => r.parentId === c.id);
+      return renderComment(c, childReplies, articleId);
     }).join('');
   } catch (e) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:16px">加载失败</p>'; }
+}
+
+function renderComment(c, replies, articleId) {
+  const avatarHtml = c.avatar ? '<img class="avatar" src="' + escapeHtml(c.avatar) + '" alt="" style="width:22px;height:22px">' : '';
+  const canDelete = currentUser && (currentUser.id === c.authorId || currentUser.isOwner);
+  const replyHtml = currentUser ? '<button class="comment-delete" style="color:var(--accent)" onclick="showReplyForm(\'' + articleId + '\', \'' + c.id + '\', \'' + escapeHtml(c.username) + '\')">回复</button>' : '';
+  let repliesHtml = '';
+  if (replies.length > 0) {
+    repliesHtml = '<div class="comment-replies">' + replies.map(r => {
+      const rAvatar = r.avatar ? '<img class="avatar" src="' + escapeHtml(r.avatar) + '" alt="" style="width:20px;height:20px">' : '';
+      const rCanDelete = currentUser && (currentUser.id === r.authorId || currentUser.isOwner);
+      const rReply = r.replyTo ? ' 回复 <b>' + escapeHtml(r.replyTo) + '</b>' : '';
+      return `
+        <div class="comment-item reply-item">
+          <div class="comment-header">
+            ${rAvatar}
+            <span class="comment-username">${escapeHtml(r.username)}</span>
+            <span class="comment-time">${formatDate(r.createdAt)}</span>
+            ${rCanDelete ? '<button class="comment-delete" onclick="deleteComment(\'' + articleId + '\', \'' + r.id + '\')">删除</button>' : ''}
+          </div>
+          <div class="comment-content">${rReply}: ${escapeHtml(r.content)}</div>
+        </div>
+      `;
+    }).join('') + '</div>';
+  }
+  return `
+    <div class="comment-item">
+      <div class="comment-header">
+        ${avatarHtml}
+        <span class="comment-username">${escapeHtml(c.username)}</span>
+        <span class="comment-time">${formatDate(c.createdAt)}</span>
+        ${replyHtml}
+        ${canDelete ? '<button class="comment-delete" onclick="deleteComment(\'' + articleId + '\', \'' + c.id + '\')">删除</button>' : ''}
+      </div>
+      <div class="comment-content">${escapeHtml(c.content)}</div>
+      ${repliesHtml}
+    </div>
+    <div id="replyForm-${c.id}" class="reply-form" style="display:none">
+      <textarea id="replyInput-${c.id}" placeholder="写下你的回复..." rows="1"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="submitReply('${articleId}', '${c.id}')">回复</button>
+      <button class="btn btn-outline btn-sm" onclick="hideReplyForm('${c.id}')">取消</button>
+    </div>
+  `;
+}
+
+function showReplyForm(articleId, parentId, username) {
+  hideAllReplyForms();
+  const form = document.getElementById('replyForm-' + parentId);
+  if (form) {
+    form.style.display = 'flex';
+    const input = document.getElementById('replyInput-' + parentId);
+    if (input) { input.placeholder = '回复 ' + username + '...'; input.focus(); }
+  }
+}
+
+function hideReplyForm(parentId) {
+  const form = document.getElementById('replyForm-' + parentId);
+  if (form) form.style.display = 'none';
+}
+
+function hideAllReplyForms() {
+  document.querySelectorAll('.reply-form').forEach(f => f.style.display = 'none');
+}
+
+async function submitReply(articleId, parentId) {
+  const input = document.getElementById('replyInput-' + parentId);
+  if (!input) return;
+  const content = input.value.trim();
+  if (!content) return;
+  try {
+    const resp = await fetch(API + '/articles/' + articleId + '/comments', {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ content, parentId })
+    });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    loadComments(articleId);
+  } catch (e) { alert('网络错误'); }
 }
 
 async function submitComment(articleId) {

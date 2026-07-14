@@ -324,6 +324,13 @@ def create_comment(article_id):
     if len(content) > 500:
         return jsonify({'error': '评论最多500字'}), 400
     author = get_user_by_id(user['id'])
+    parentId = data.get('parentId', '')
+    replyTo = ''
+    if parentId:
+        all_cmts = read_json(COMMENTS_FILE)
+        parent = next((c for c in all_cmts if c['id'] == parentId), None)
+        if parent:
+            replyTo = parent.get('username', '')
     comment = {
         'id': 'c' + str(int(time.time() * 1000)),
         'articleId': article_id,
@@ -331,6 +338,8 @@ def create_comment(article_id):
         'username': author['username'] if author else user.get('username', ''),
         'avatar': author.get('avatar', '') if author else '',
         'content': content,
+        'parentId': parentId,
+        'replyTo': replyTo,
         'createdAt': datetime.now().isoformat()
     }
     comments = read_json(COMMENTS_FILE)
@@ -352,6 +361,8 @@ def delete_comment(article_id, comment_id):
     if c['authorId'] != user['id'] and not is_owner(user):
         return jsonify({'error': '无权删除此评论'}), 403
     comments.pop(idx)
+    # also remove replies to this comment
+    comments = [c for c in comments if not (c.get('parentId') == comment_id)]
     write_json(COMMENTS_FILE, comments)
     return jsonify({'success': True})
 
