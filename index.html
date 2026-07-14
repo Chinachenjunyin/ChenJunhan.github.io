@@ -1,145 +1,1279 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>专业设备解锁服务</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #f0f7ff 0%, #e6f7ff 100%);
-            padding: 15px;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        .wechat-warning {
-            background: #f5222d;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            display: none;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .container {
-            max-width: 100%;
-            margin: 15px auto;
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 6px 16px rgba(24, 144, 255, 0.12);
-        }
-        header {
-            background: linear-gradient(135deg, #1890ff 0%, #0050b3 100%);
-            color: white;
-            padding: 25px 20px;
-            text-align: center;
-        }
-        h1 {
-            font-size: 22px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        .subtitle {
-            opacity: 0.9;
-            font-size: 15px;
-        }
-        .content {
-            padding: 25px 20px;
-        }
-        .step-title {
-            color: #1890ff;
-            font-size: 18px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: 500;
-        }
-        .qrcode-box {
-            text-align: center;
-            padding: 15px 0;
-        }
-        .qrcode {
-            width: 240px;
-            height: 240px;
-            display: inline-block;
-            border: 1px solid #f0f0f0;
-            border-radius: 8px;
-            background: white;
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        .notice {
-            background: #fffbe6;
-            border: 1px solid #ffe58f;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            color: #d48806;
-            font-size: 14px;
-        }
-        .contact-info {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 16px;
-        }
-        .wechat-id {
-            color: #1890ff;
-            font-weight: 600;
-            font-size: 18px;
-            letter-spacing: 1px;
-        }
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #8c8c8c;
-            font-size: 13px;
-            border-top: 1px solid #f0f0f0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小小雨</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --text: #3a322e;
+    --text-muted: #7a6e64;
+    --accent: #b0855a;
+    --accent-hover: #8c6640;
+    --owner-color: #d48806;
+    --danger: #c0392b;
+    --glass-bg: rgba(251, 247, 242, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.45);
+    --glass-shadow: 0 8px 32px rgba(155, 127, 104, 0.12);
+    --tag-bg: rgba(234, 215, 192, 0.5);
+    --tag-text: #8c6640;
+    --radius: 16px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: var(--text);
+    line-height: 1.8;
+    min-height: 100vh;
+    position: relative;
+    isolation: isolate;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background: url('bg-ref.webp') center/cover no-repeat;
+    background-attachment: fixed;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(ellipse 80% 70% at 20% 30%, rgba(245, 239, 232, 0.5) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 80% at 75% 60%, rgba(234, 215, 192, 0.35) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 60% at 50% 80%, rgba(201, 165, 125, 0.2) 0%, transparent 65%),
+      radial-gradient(ellipse 70% 50% at 85% 15%, rgba(239, 217, 207, 0.3) 0%, transparent 60%);
+    backdrop-filter: blur(2px) saturate(1.1);
+  }
+
+  .noise-layer {
+    position: fixed; inset: 0; z-index: -1; opacity: 0.04; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  }
+
+  /* ---- nav ---- */
+  nav {
+    background: rgba(251, 247, 242, 0.75);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  nav .logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  nav .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  nav .nav-links a, nav .nav-links button {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 15px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    transition: color 0.2s;
+  }
+
+  nav .nav-links a:hover, nav .nav-links button:hover { color: var(--accent); }
+
+  .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-badge {
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-size: 13px;
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+
+  .admin-link {
+    color: var(--accent) !important;
+    font-weight: 600 !important;
+  }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .btn-outline:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+
+  .btn-danger:hover {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  .btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+
+  /* ---- container ---- */
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .page-subtitle {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 36px;
+  }
+
+  /* ---- post cards ---- */
+  .post-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--glass-shadow);
+    cursor: pointer;
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+  }
+
+  .post-card:hover {
+    box-shadow: 0 12px 40px rgba(155, 127, 104, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.6);
+    transform: translateY(-3px);
+    background: rgba(251, 247, 242, 0.7);
+  }
+
+  .post-card h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .post-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .post-excerpt {
+    font-size: 15px;
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .tag {
+    display: inline-block;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+
+  .owner-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: 1px solid #fcd34d;
+  }
+
+  /* ---- post detail ---- */
+  .post-detail { display: none; }
+  .post-detail.active { display: block; }
+  .post-list.hidden { display: none; }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 15px;
+    margin-bottom: 24px;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  .back-btn:hover { color: var(--accent-hover); }
+
+  .post-detail h1 {
+    font-size: 28px;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .post-detail .post-meta {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(201, 165, 125, 0.25);
+  }
+
+  .post-content h2 { font-size: 22px; margin: 32px 0 12px; }
+  .post-content h3 { font-size: 18px; margin: 24px 0 8px; }
+  .post-content p { margin-bottom: 16px; font-size: 16px; }
+  .post-content ul, .post-content ol { margin: 12px 0 16px 24px; }
+  .post-content li { margin-bottom: 6px; }
+
+  .post-content pre {
+    background: rgba(58, 50, 46, 0.9);
+    color: #e8d5c4;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .post-content code {
+    background: rgba(234, 215, 192, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .post-content pre code { background: none; padding: 0; }
+
+  .post-content blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 8px 16px;
+    margin: 16px 0;
+    color: var(--text-muted);
+    background: rgba(234, 215, 192, 0.25);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .article-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(201, 165, 125, 0.2);
+  }
+
+  /* ---- modal ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+
+  .modal h2 {
+    font-size: 22px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .form-group input, .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid rgba(201, 165, 125, 0.3);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: rgba(255,255,255,0.6);
+    transition: border-color 0.2s;
+    color: var(--text);
+    resize: vertical;
+  }
+
+  .form-group input:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+
+  .modal-link {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .modal-link a {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .modal-link a:hover { text-decoration: underline; }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  /* ---- media upload ---- */
+  .media-upload-area {
+    border: 2px dashed rgba(201, 165, 125, 0.3);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .media-upload-area:hover {
+    border-color: var(--accent);
+  }
+
+  .media-upload-area input[type="file"] {
+    display: none;
+  }
+
+  .media-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .media-preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.05);
+  }
+
+  .media-preview-item img, .media-preview-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .media-preview-item .media-insert {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  .media-preview-item .media-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .post-content img, .post-content video {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 10px 0;
+  }
+
+  /* ---- publish card ---- */
+  .publish-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--glass-shadow);
+    border: 1px solid var(--glass-border);
+  }
+
+  .publish-card h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .tag-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag-input .tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+
+  .tag-input .tag-item .remove-tag {
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    margin-left: 2px;
+  }
+
+  .tag-input input {
+    border: 1px solid rgba(201, 165, 125, 0.3);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    background: rgba(255,255,255,0.6);
+    width: 120px;
+    font-family: inherit;
+  }
+
+  .tag-input input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ---- admin panel ---- */
+  .admin-panel { display: none; }
+  .admin-panel.active { display: block; }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+    border: 1px solid var(--glass-border);
+  }
+
+  .admin-table th, .admin-table td {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(201, 165, 125, 0.15);
+  }
+
+  .admin-table th {
+    background: rgba(234, 215, 192, 0.3);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .admin-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+  }
+
+  .admin-tabs button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: var(--glass-bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .admin-tabs button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  footer {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+    border-top: 1px solid rgba(201, 165, 125, 0.2);
+    background: rgba(251, 247, 242, 0.4);
+    backdrop-filter: blur(10px);
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 20px 14px 60px; }
+    .post-card { padding: 18px; }
+    .post-detail h1 { font-size: 24px; }
+    .modal { padding: 24px; }
+    nav .nav-links { gap: 10px; }
+    .admin-table th, .admin-table td { padding: 8px 10px; font-size: 12px; }
+  }
+
+  /* ---- avatar ---- */
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(201, 165, 125, 0.5);
+    vertical-align: middle;
+  }
+
+  .avatar-lg {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(201, 165, 125, 0.5);
+  }
+
+  .avatar-cell {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--glass-border);
+  }
+
+  .profile-overlay {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .profile-overlay .avatar-lg {
+    display: block;
+    margin: 0 auto 8px;
+  }
+</style>
 </head>
 <body>
-    <!-- 微信环境提示条 -->
-    <div class="wechat-warning" id="warningBar">
-        请点击右上角 ⋯ 选择「在浏览器打开」
-    </div>
 
-    <div class="container">
-        <header>
-            <h1>专业设备解锁服务</h1>
-            <p class="subtitle">快速解锁 · 安全可靠</p>
-        </header>
-        
-        <div class="content">
-            <div class="step-title">扫码支付</div>
-            <div class="qrcode-box">
-                <img src="pay.jpg" alt="支付二维码" class="qrcode">
-            </div>
-            
-            <div class="notice">
-                <p>⚠️ 支付后请务必添加客服微信确认订单</p>
-                <p>⚠️ 支付时备注您的设备型号</p>
-            </div>
-            
-            <div class="step-title">联系客服</div>
-            <div class="contact-info">
-                <p>微信ID：<span class="wechat-id">YourWeChatID</span></p>
-                <p style="margin-top:10px;color:#ff4d4f">添加时请备注「已支付」</p>
-            </div>
+<div class="noise-layer"></div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal" id="authModalInner"></div>
+</div>
+
+<!-- Publish Modal -->
+<div class="modal-overlay" id="publishModal">
+  <div class="modal" style="max-width:600px" id="publishModalInner"></div>
+</div>
+
+<nav>
+  <span class="logo" onclick="showList()">小小雨</span>
+  <div class="nav-links">
+    <a href="#" onclick="showList()">文章</a>
+    <span id="navUser"></span>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="post-list" id="postList">
+    <h1 class="page-title">所有文章</h1>
+    <p class="page-subtitle">记录技术、生活与思考</p>
+    <div id="publishArea"></div>
+    <div id="posts"></div>
+  </div>
+
+  <div class="post-detail" id="postDetail"></div>
+
+  <div class="admin-panel" id="adminPanel">
+    <h1 class="page-title">后台管理</h1>
+    <div class="admin-tabs">
+      <button class="active" onclick="switchAdminTab('articles')">文章管理</button>
+      <button onclick="switchAdminTab('users')">用户管理</button>
+    </div>
+    <div id="adminContent"></div>
+  </div>
+</div>
+
+<footer>&copy; 2026 小小雨</footer>
+
+<script>
+const API = '/api';
+let currentUser = null;
+let allPosts = [];
+let adminTab = 'articles';
+
+function authHeaders() {
+  const t = localStorage.getItem('token');
+  return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  return iso.slice(0, 10);
+}
+
+function saveAuth(token, user) {
+  localStorage.setItem('token', token);
+  currentUser = user;
+  updateNav();
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  currentUser = null;
+  updateNav();
+  showList();
+}
+
+function updateNav() {
+  const el = document.getElementById('navUser');
+  if (!currentUser) {
+    el.innerHTML = '<a href="#" onclick="showAuth(\'login\')">登录</a><a href="#" onclick="showAuth(\'register\')">注册</a>';
+  } else {
+    const avatarHtml = currentUser.avatar
+      ? `<img class="avatar" src="${escapeHtml(currentUser.avatar)}" alt="">`
+      : '';
+    let html = '<div class="user-menu">';
+    html += '<span class="user-badge" style="cursor:pointer" onclick="showProfile()">' + (avatarHtml ? avatarHtml + ' ' : '') + escapeHtml(currentUser.username) + '</span>';
+    if (currentUser.isOwner) {
+      html += '<a href="#" class="admin-link" onclick="showAdmin()">管理</a>';
+    }
+    html += '<button onclick="showPublish()">写文章</button>';
+    html += '<button onclick="logout()">退出</button>';
+    html += '</div>';
+    el.innerHTML = html;
+  }
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function showAuth(mode) {
+  const m = document.getElementById('authModalInner');
+  const isLogin = mode === 'login';
+  m.innerHTML = `
+    <h2>${isLogin ? '登录' : '注册'}</h2>
+    <div class="error-msg" id="authError"></div>
+    <div class="form-group">
+      <label>邮箱</label>
+      <input type="email" id="authEmail" placeholder="请输入邮箱">
+    </div>
+    ${!isLogin ? '<div class="form-group"><label>用户名</label><input type="text" id="authUsername" placeholder="请输入用户名"></div>' : ''}
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="authPassword" placeholder="请输入密码">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeAuth()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="doAuth('${mode}')">${isLogin ? '登录' : '注册'}</button>
+    </div>
+    <div class="modal-link">
+      ${isLogin ? '没有账号？<a onclick="showAuth(\'register\')">立即注册</a>' : '已有账号？<a onclick="showAuth(\'login\')">立即登录</a>'}
+    </div>
+  `;
+  document.getElementById('authModal').classList.add('active');
+}
+
+function closeAuth() {
+  document.getElementById('authModal').classList.remove('active');
+}
+
+async function doAuth(mode) {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  const username = mode === 'register' ? document.getElementById('authUsername').value.trim() : '';
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+
+  if (!email || !password || (mode === 'register' && !username)) {
+    errEl.textContent = '请填写完整信息';
+    return;
+  }
+
+  const url = mode === 'login' ? API + '/login' : API + '/register';
+  const body = mode === 'login' ? { email, password } : { email, password, username };
+
+  try {
+    const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await resp.json();
+    if (!resp.ok) { errEl.textContent = data.error; return; }
+    saveAuth(data.token, data.user);
+    closeAuth();
+    loadPosts();
+  } catch (e) {
+    errEl.textContent = '网络错误，请重试';
+  }
+}
+
+function showPublish(editPost) {
+  const m = document.getElementById('publishModalInner');
+  const isEdit = !!editPost;
+  m.innerHTML = `
+    <h2>${isEdit ? '编辑文章' : '发布文章'}</h2>
+    <div class="error-msg" id="pubError"></div>
+    <div class="form-group">
+      <label>标题</label>
+      <input type="text" id="pubTitle" value="${isEdit ? escapeHtml(editPost.title) : ''}" placeholder="文章标题">
+    </div>
+    <div class="form-group">
+      <label>标签（回车添加）</label>
+      <div class="tag-input" id="tagInput">
+        <span id="tagList"></span>
+        <input type="text" id="tagField" placeholder="输入标签">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>内容（支持 HTML，点击下方媒体可插入）</label>
+      <textarea id="pubContent" rows="12" placeholder="文章内容...">${isEdit ? editPost.content : ''}</textarea>
+    </div>
+    <div class="form-group">
+      <label>上传图片 / 视频</label>
+      <div class="media-upload-area" onclick="document.getElementById('mediaFileInput').click()">
+        <input type="file" id="mediaFileInput" accept="image/*,video/*" onchange="uploadMedia(event)" multiple>
+        <p style="color:var(--text-muted);font-size:13px">点击上传或拖拽文件，支持 jpg/png/gif/webp/mp4/webm/mov</p>
+      </div>
+      <div class="media-preview" id="mediaPreview"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closePublish()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="${isEdit ? "doUpdate('" + editPost.id + "')" : 'doPublish()'}">${isEdit ? '保存修改' : '发布'}</button>
+    </div>
+  `;
+  document.getElementById('publishModal').classList.add('active');
+  let tags = isEdit ? [...(editPost.tags || [])] : [];
+  renderTags(tags);
+  document.getElementById('tagField').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const v = this.value.trim();
+      if (v && !tags.includes(v)) {
+        tags.push(v);
+        renderTags(tags);
+        this.value = '';
+      }
+    }
+  });
+  window._pubTags = tags;
+  window._uploadedMedia = [];
+  renderMediaPreview();
+}
+
+function renderTags(tags) {
+  const el = document.getElementById('tagList');
+  el.innerHTML = tags.map((t, i) => `<span class="tag-item">${escapeHtml(t)}<span class="remove-tag" onclick="removeTag(${i})">&times;</span></span>`).join('');
+}
+
+function removeTag(i) {
+  window._pubTags.splice(i, 1);
+  renderTags(window._pubTags);
+}
+
+function closePublish() {
+  document.getElementById('publishModal').classList.remove('active');
+}
+
+async function uploadMedia(event) {
+  const files = event.target.files;
+  if (!files.length) return;
+  const errEl = document.getElementById('pubError');
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const resp = await fetch(API + '/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }, body: formData });
+      const data = await resp.json();
+      if (!resp.ok) { errEl.textContent = data.error; return; }
+      window._uploadedMedia.push(data);
+      renderMediaPreview();
+    } catch (e) { errEl.textContent = '上传失败'; }
+  }
+  event.target.value = '';
+}
+
+function renderMediaPreview() {
+  const el = document.getElementById('mediaPreview');
+  if (!el) return;
+  const media = window._uploadedMedia || [];
+  el.innerHTML = media.map((m, i) => {
+    let inner = '';
+    if (m.type === 'video') {
+      inner = '<video src="' + escapeHtml(m.url) + '"></video>';
+    } else {
+      inner = '<img src="' + escapeHtml(m.url) + '" alt="">';
+    }
+    return `
+      <div class="media-preview-item">
+        ${inner}
+        <button class="media-remove" onclick="removeMedia(${i})">&times;</button>
+        <button class="media-insert" onclick="insertMedia('${m.url}', '${m.type}')">插入</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeMedia(i) {
+  window._uploadedMedia.splice(i, 1);
+  renderMediaPreview();
+}
+
+function insertMedia(url, type) {
+  const textarea = document.getElementById('pubContent');
+  if (!textarea) return;
+  let tag = '';
+  if (type === 'video') {
+    tag = '<video src="' + url + '" controls style="max-width:100%;border-radius:8px;margin:10px 0"></video>';
+  } else {
+    tag = '<img src="' + url + '" alt="" style="max-width:100%;border-radius:8px;margin:10px 0">';
+  }
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  textarea.value = textarea.value.substring(0, start) + tag + textarea.value.substring(end);
+  textarea.focus();
+  textarea.setSelectionRange(start + tag.length, start + tag.length);
+}
+
+async function doPublish() {
+  const title = document.getElementById('pubTitle').value.trim();
+  const content = document.getElementById('pubContent').value.trim();
+  const tags = window._pubTags || [];
+  const errEl = document.getElementById('pubError');
+  errEl.textContent = '';
+  if (!title || !content) { errEl.textContent = '标题和内容不能为空'; return; }
+
+  try {
+    const resp = await fetch(API + '/articles', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ title, content, tags }) });
+    const data = await resp.json();
+    if (!resp.ok) { errEl.textContent = data.error; return; }
+    closePublish();
+    loadPosts();
+  } catch (e) { errEl.textContent = '网络错误'; }
+}
+
+async function doUpdate(id) {
+  const title = document.getElementById('pubTitle').value.trim();
+  const content = document.getElementById('pubContent').value.trim();
+  const tags = window._pubTags || [];
+  const errEl = document.getElementById('pubError');
+  errEl.textContent = '';
+  if (!title || !content) { errEl.textContent = '标题和内容不能为空'; return; }
+
+  try {
+    const resp = await fetch(API + '/articles/' + id, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ title, content, tags }) });
+    const data = await resp.json();
+    if (!resp.ok) { errEl.textContent = data.error; return; }
+    closePublish();
+    loadPosts();
+    showPostById(id);
+  } catch (e) { errEl.textContent = '网络错误'; }
+}
+
+async function deleteArticle(id) {
+  if (!confirm('确认删除这篇文章？')) return;
+  try {
+    await fetch(API + '/articles/' + id, { method: 'DELETE', headers: authHeaders() });
+    showList();
+    loadPosts();
+  } catch (e) {}
+}
+
+async function loadPosts() {
+  try {
+    const resp = await fetch(API + '/articles');
+    allPosts = await resp.json();
+  } catch (e) {
+    allPosts = [];
+  }
+  renderPosts();
+}
+
+function renderPosts() {
+  const container = document.getElementById('posts');
+  const publishArea = document.getElementById('publishArea');
+
+  if (currentUser) {
+    publishArea.innerHTML = `
+      <div class="publish-card">
+        <h3>有什么想分享的？</h3>
+        <button class="btn btn-primary btn-sm" onclick="showPublish()">写文章</button>
+      </div>
+    `;
+  } else {
+    publishArea.innerHTML = '';
+  }
+
+  if (allPosts.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px">暂无文章</p>';
+    return;
+  }
+
+  container.innerHTML = allPosts.map(p => {
+    const created = formatDate(p.createdAt);
+    let tagsHtml = p.tags.map(t => '<span class="tag">' + escapeHtml(t) + '</span>').join('');
+    if (p.isOwner) {
+      tagsHtml = '<span class="owner-tag">站长</span>' + tagsHtml;
+    }
+    return `
+      <article class="post-card" onclick="showPostById('${p.id}')">
+        <h2>${escapeHtml(p.title)}</h2>
+        <div class="post-meta">
+          <span>${created}</span>
+          <span>${p.authorAvatar ? '<img class="avatar" src="' + escapeHtml(p.authorAvatar) + '" alt="" style="width:18px;height:18px;margin-right:4px">' : ''}${escapeHtml(p.authorName)}</span>
+          ${tagsHtml}
         </div>
-        
-        <footer>
-            <p>© 2023 专业解锁服务 | 扫码即代表同意服务条款</p>
-        </footer>
-    </div>
+        ${p.excerpt ? '<p class="post-excerpt">' + escapeHtml(p.excerpt) + '</p>' : ''}
+      </article>
+    `;
+  }).join('');
+}
 
-    <script>
-        // 自动检测微信环境
-        if(/MicroMessenger/i.test(navigator.userAgent)) {
-            document.getElementById('warningBar').style.display = 'block';
+async function showPostById(id) {
+  let post = allPosts.find(p => p.id === id);
+  if (!post) {
+    try {
+      const resp = await fetch(API + '/articles/' + id);
+      post = await resp.json();
+    } catch (e) { return; }
+  }
+  if (!post) return;
+
+  document.getElementById('postList').classList.add('hidden');
+  document.getElementById('adminPanel').classList.remove('active');
+  const detail = document.getElementById('postDetail');
+  const created = formatDate(post.createdAt);
+  let tagsHtml = post.tags.map(t => '<span class="tag">' + escapeHtml(t) + '</span>').join('');
+  if (post.isOwner) {
+    tagsHtml = '<span class="owner-tag">站长</span>' + tagsHtml;
+  }
+
+  let actionsHtml = '';
+  if (currentUser && (currentUser.id === post.authorId || currentUser.isOwner)) {
+    actionsHtml = `
+      <div class="article-actions">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showPublish(allPosts.find(p=>p.id==='${post.id}'))">编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteArticle('${post.id}')">删除</button>
+      </div>
+    `;
+  }
+
+  detail.innerHTML = `
+    <button class="back-btn" onclick="showList()">← 返回文章列表</button>
+    <h1>${escapeHtml(post.title)}</h1>
+    <div class="post-meta">
+      <span>${created}</span>
+      <span>${post.authorAvatar ? '<img class="avatar" src="' + escapeHtml(post.authorAvatar) + '" alt="" style="width:18px;height:18px;margin-right:4px">' : ''}${escapeHtml(post.authorName)}</span>
+      ${tagsHtml}
+    </div>
+    <div class="post-content">${post.content}</div>
+    ${actionsHtml}
+  `;
+  detail.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showList() {
+  document.getElementById('postDetail').classList.remove('active');
+  document.getElementById('adminPanel').classList.remove('active');
+  document.getElementById('postList').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+async function showAdmin() {
+  if (!currentUser || !currentUser.isOwner) return;
+  document.getElementById('postDetail').classList.remove('active');
+  document.getElementById('postList').classList.add('hidden');
+  document.getElementById('adminPanel').classList.add('active');
+  adminTab = 'articles';
+  document.querySelectorAll('.admin-tabs button').forEach((b, i) => b.classList.toggle('active', i === 0));
+  loadAdminArticles();
+}
+
+async function switchAdminTab(tab) {
+  adminTab = tab;
+  document.querySelectorAll('.admin-tabs button').forEach((b, i) => {
+    b.classList.toggle('active', (tab === 'articles' && i === 0) || (tab === 'users' && i === 1));
+  });
+  if (tab === 'articles') loadAdminArticles();
+  else loadAdminUsers();
+}
+
+async function loadAdminArticles() {
+  const el = document.getElementById('adminContent');
+  try {
+    const resp = await fetch(API + '/admin/articles', { headers: authHeaders() });
+    const articles = await resp.json();
+    el.innerHTML = `
+      <table class="admin-table">
+        <thead><tr><th>标题</th><th>作者</th><th>站长</th><th>日期</th><th>操作</th></tr></thead>
+        <tbody>
+          ${articles.map(a => `
+            <tr>
+              <td>${escapeHtml(a.title)}</td>
+              <td>${escapeHtml(a.authorName)}</td>
+              <td>${a.isOwner ? '<span class="owner-tag">站长</span>' : '-'}</td>
+              <td>${formatDate(a.createdAt)}</td>
+              <td><button class="btn btn-outline btn-sm" onclick="adminEditArticle('${a.id}')">编辑</button> <button class="btn btn-danger btn-sm" onclick="adminDeleteArticle('${a.id}')">删除</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (e) { el.innerHTML = '<p>加载失败</p>'; }
+}
+
+async function loadAdminUsers() {
+  const el = document.getElementById('adminContent');
+  try {
+    const resp = await fetch(API + '/admin/users', { headers: authHeaders() });
+    const users = await resp.json();
+    el.innerHTML = `
+      <table class="admin-table">
+        <thead><tr><th>头像</th><th>用户名</th><th>邮箱</th><th>角色</th><th>文章数</th><th>注册时间</th><th>操作</th></tr></thead>
+        <tbody>
+          ${users.map(u => {
+            const avatar = u.avatar ? `<img class="avatar-cell" src="${escapeHtml(u.avatar)}" alt="">` : '';
+            const roleLabel = u.role === 'admin' ? '<span class="owner-tag">管理员</span>' : '用户';
+            const isSelf = currentUser && currentUser.id === u.id;
+            let actionHtml = '-';
+            if (currentUser && currentUser.isOwner && !isSelf) {
+              if (u.role === 'user') {
+                actionHtml = '<button class="btn btn-outline btn-sm" onclick="changeUserRole(\'' + u.id + '\', \'admin\')">设为管理员</button>';
+              } else {
+                actionHtml = '<button class="btn btn-outline btn-sm" onclick="changeUserRole(\'' + u.id + '\', \'user\')">降为普通用户</button>';
+              }
+            }
+            return `
+            <tr>
+              <td>${avatar}</td>
+              <td>${escapeHtml(u.username)}</td>
+              <td>${escapeHtml(u.email)}</td>
+              <td>${roleLabel}</td>
+              <td>${u.articleCount}</td>
+              <td>${formatDate(u.createdAt)}</td>
+              <td>${actionHtml}</td>
+            </tr>
+          `}).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (e) { el.innerHTML = '<p>加载失败</p>'; }
+}
+
+async function adminEditArticle(id) {
+  try {
+    const resp = await fetch(API + '/articles/' + id);
+    const post = await resp.json();
+    showPublish(post);
+  } catch (e) {}
+}
+
+async function adminDeleteArticle(id) {
+  if (!confirm('确认删除这篇文章？')) return;
+  try {
+    await fetch(API + '/articles/' + id, { method: 'DELETE', headers: authHeaders() });
+    loadAdminArticles();
+    loadPosts();
+  } catch (e) {}
+}
+
+async function changeUserRole(userId, newRole) {
+  if (!confirm('确认' + (newRole === 'admin' ? '设为管理员' : '降为普通用户') + '？')) return;
+  try {
+    const resp = await fetch(API + '/admin/users/' + userId, {
+      method: 'PUT', headers: authHeaders(),
+      body: JSON.stringify({ role: newRole })
+    });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    loadAdminUsers();
+  } catch (e) { alert('网络错误'); }
+}
+
+function showProfile() {
+  const m = document.getElementById('authModalInner');
+  const user = currentUser;
+  if (!user) return;
+  const avatarImg = user.avatar
+    ? `<img class="avatar-lg" src="${escapeHtml(user.avatar)}" alt="">`
+    : '<div class="avatar-lg" style="display:inline-block;background:var(--glass-bg);border:3px solid rgba(201,165,125,0.5);border-radius:50%;line-height:60px;color:var(--text-muted);font-size:20px">?</div>';
+  m.innerHTML = `
+    <h2>个人信息</h2>
+    <div class="error-msg" id="profileError"></div>
+    <div class="profile-overlay">
+      ${avatarImg}
+      <p style="font-size:14px;margin-top:4px">${escapeHtml(user.username)}</p>
+    </div>
+    <div class="form-group">
+      <label>用户名</label>
+      <input type="text" id="profileUsername" value="${escapeHtml(user.username)}">
+    </div>
+    <div class="form-group">
+      <label>头像 URL</label>
+      <input type="text" id="profileAvatar" value="${escapeHtml(user.avatar || '')}" placeholder="粘贴图片URL或先上传到素材">
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);text-align:center">提示：写文章时上传图片获取URL，将URL粘贴过来作为头像</p>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeAuth()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveProfile()">保存</button>
+    </div>
+  `;
+  document.getElementById('authModal').classList.add('active');
+}
+
+async function saveProfile() {
+  const username = document.getElementById('profileUsername').value.trim();
+  const avatar = document.getElementById('profileAvatar').value.trim();
+  const errEl = document.getElementById('profileError');
+  errEl.textContent = '';
+  if (!username) { errEl.textContent = '用户名不能为空'; return; }
+  try {
+    const resp = await fetch(API + '/me', {
+      method: 'PUT', headers: authHeaders(),
+      body: JSON.stringify({ username, avatar })
+    });
+    if (!resp.ok) { const d = await resp.json(); errEl.textContent = d.error; return; }
+    const updated = await resp.json();
+    closeAuth();
+    const token = localStorage.getItem('token');
+    const meResp = await fetch(API + '/me', { headers: { 'Authorization': 'Bearer ' + token } });
+    currentUser = await meResp.json();
+    updateNav();
+    showList();
+  } catch (e) { errEl.textContent = '网络错误'; }
+}
+
+function init() {
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetch(API + '/me', { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(r => r.json())
+      .then(data => {
+        if (data.id) {
+          currentUser = data;
+          updateNav();
         }
-    </script>
+      })
+      .catch(() => {});
+  }
+  updateNav();
+  loadPosts();
+}
+
+init();
+</script>
 </body>
 </html>
