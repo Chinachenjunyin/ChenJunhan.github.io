@@ -356,6 +356,8 @@
     padding: 32px;
     width: 90%;
     max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     border: 1px solid var(--glass-border);
   }
@@ -710,6 +712,101 @@
   .profile-overlay .avatar-lg {
     display: block;
     margin: 0 auto 8px;
+  }
+
+  /* ---- comments ---- */
+  .comment-section {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .comment-section h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .comment-item {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border: 1px solid var(--glass-border);
+  }
+
+  .comment-item .comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .comment-item .comment-username {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .comment-item .comment-time {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .comment-item .comment-content {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .comment-item .comment-delete {
+    font-size: 12px;
+    color: var(--danger);
+    cursor: pointer;
+    background: none;
+    border: none;
+    margin-left: auto;
+    font-family: inherit;
+  }
+
+  .comment-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    align-items: flex-end;
+  }
+
+  .comment-form textarea {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    color: var(--text);
+    resize: vertical;
+    min-height: 44px;
+    max-height: 120px;
+  }
+
+  .comment-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .comment-login-hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 16px;
+  }
+
+  .comment-login-hint a {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: none;
   }
 </style>
 </head>
@@ -1157,9 +1254,76 @@ async function showPostById(id) {
     </div>
     <div class="post-content">${post.content}</div>
     ${actionsHtml}
+    <div class="comment-section" id="commentSection">
+      <h3>评论</h3>
+      <div id="commentList"><p style="color:var(--text-muted);text-align:center;padding:16px">加载中...</p></div>
+      ${currentUser ? `
+        <div class="comment-form">
+          <textarea id="commentInput" placeholder="写下你的评论..." rows="1"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="submitComment('${post.id}')">发表</button>
+        </div>
+      ` : `
+        <div class="comment-login-hint">
+          <a href="#" onclick="showAuth('login')">登录</a> 后参与评论
+        </div>
+      `}
+    </div>
   `;
   detail.classList.add('active');
   window.scrollTo(0, 0);
+  loadComments(post.id);
+}
+
+async function loadComments(articleId) {
+  const el = document.getElementById('commentList');
+  try {
+    const resp = await fetch(API + '/articles/' + articleId + '/comments');
+    const comments = await resp.json();
+    if (comments.length === 0) {
+      el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:16px">暂无评论</p>';
+      return;
+    }
+    el.innerHTML = comments.map(c => {
+      const avatarHtml = c.avatar ? '<img class="avatar" src="' + escapeHtml(c.avatar) + '" alt="" style="width:22px;height:22px">' : '';
+      const canDelete = currentUser && (currentUser.id === c.authorId || currentUser.isOwner);
+      return `
+        <div class="comment-item">
+          <div class="comment-header">
+            ${avatarHtml}
+            <span class="comment-username">${escapeHtml(c.username)}</span>
+            <span class="comment-time">${formatDate(c.createdAt)}</span>
+            ${canDelete ? '<button class="comment-delete" onclick="deleteComment(\'' + articleId + '\', \'' + c.id + '\')">删除</button>' : ''}
+          </div>
+          <div class="comment-content">${escapeHtml(c.content)}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:16px">加载失败</p>'; }
+}
+
+async function submitComment(articleId) {
+  const input = document.getElementById('commentInput');
+  const content = input.value.trim();
+  if (!content) return;
+  try {
+    const resp = await fetch(API + '/articles/' + articleId + '/comments', {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ content })
+    });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    input.value = '';
+    loadComments(articleId);
+  } catch (e) { alert('网络错误'); }
+}
+
+async function deleteComment(articleId, commentId) {
+  if (!confirm('确认删除这条评论？')) return;
+  try {
+    await fetch(API + '/articles/' + articleId + '/comments/' + commentId, {
+      method: 'DELETE', headers: authHeaders()
+    });
+    loadComments(articleId);
+  } catch (e) {}
 }
 
 function showList() {

@@ -14,6 +14,7 @@ JWT_SECRET = 'blog-secret-2024'
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 USERS_FILE = os.path.join(DATA_DIR, 'users.json')
 ARTICLES_FILE = os.path.join(DATA_DIR, 'articles.json')
+COMMENTS_FILE = os.path.join(DATA_DIR, 'comments.json')
 UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
 OWNER_EMAIL = '3615744342@qq.com'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'webm', 'mov', 'avi'}
@@ -56,6 +57,8 @@ def init_data():
         write_json(USERS_FILE, [owner])
     if not os.path.exists(ARTICLES_FILE):
         write_json(ARTICLES_FILE, [])
+    if not os.path.exists(COMMENTS_FILE):
+        write_json(COMMENTS_FILE, [])
 
 
 def get_user_by_id(uid):
@@ -298,6 +301,58 @@ def delete_article(article_id):
         return jsonify({'error': '无权删除此文章'}), 403
     articles.pop(idx)
     write_json(ARTICLES_FILE, articles)
+    return jsonify({'success': True})
+
+
+@app.route('/api/articles/<article_id>/comments', methods=['GET'])
+def get_comments(article_id):
+    comments = read_json(COMMENTS_FILE)
+    article_comments = [c for c in comments if c['articleId'] == article_id]
+    article_comments.sort(key=lambda c: c.get('createdAt', ''))
+    return jsonify(article_comments)
+
+
+@app.route('/api/articles/<article_id>/comments', methods=['POST'])
+def create_comment(article_id):
+    user, err_resp, status = require_auth()
+    if err_resp:
+        return err_resp, status
+    data = request.get_json() or {}
+    content = data.get('content', '').strip()
+    if not content:
+        return jsonify({'error': '评论内容不能为空'}), 400
+    if len(content) > 500:
+        return jsonify({'error': '评论最多500字'}), 400
+    author = get_user_by_id(user['id'])
+    comment = {
+        'id': 'c' + str(int(time.time() * 1000)),
+        'articleId': article_id,
+        'authorId': user['id'],
+        'username': author['username'] if author else user.get('username', ''),
+        'avatar': author.get('avatar', '') if author else '',
+        'content': content,
+        'createdAt': datetime.now().isoformat()
+    }
+    comments = read_json(COMMENTS_FILE)
+    comments.append(comment)
+    write_json(COMMENTS_FILE, comments)
+    return jsonify(comment)
+
+
+@app.route('/api/articles/<article_id>/comments/<comment_id>', methods=['DELETE'])
+def delete_comment(article_id, comment_id):
+    user, err_resp, status = require_auth()
+    if err_resp:
+        return err_resp, status
+    comments = read_json(COMMENTS_FILE)
+    idx = next((i for i, c in enumerate(comments) if c['id'] == comment_id and c['articleId'] == article_id), None)
+    if idx is None:
+        return jsonify({'error': '评论不存在'}), 404
+    c = comments[idx]
+    if c['authorId'] != user['id'] and not is_owner(user):
+        return jsonify({'error': '无权删除此评论'}), 403
+    comments.pop(idx)
+    write_json(COMMENTS_FILE, comments)
     return jsonify({'success': True})
 
 
