@@ -372,6 +372,29 @@ def update_avatar():
     return jsonify(user_public(users[idx]))
 
 
+@app.route('/api/me/password', methods=['PUT'])
+def change_password():
+    user, err_resp, status = require_auth()
+    if err_resp:
+        return err_resp, status
+    data = request.get_json() or {}
+    current_password = data.get('currentPassword', '')
+    new_password = data.get('newPassword', '').strip()
+    if not current_password or not new_password:
+        return jsonify({'error': '请填写当前密码和新密码'}), 400
+    if len(new_password) < 6:
+        return jsonify({'error': '新密码至少6位'}), 400
+    users = read_json(USERS_FILE)
+    idx = next((i for i, u in enumerate(users) if u['id'] == user['id']), None)
+    if idx is None:
+        return jsonify({'error': '用户不存在'}), 404
+    if not bcrypt.checkpw(current_password.encode(), users[idx]['password'].encode()):
+        return jsonify({'error': '当前密码错误'}), 403
+    users[idx]['password'] = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+    write_json(USERS_FILE, users)
+    return jsonify({'success': True})
+
+
 @app.route('/api/me', methods=['PUT'])
 def update_me():
     user, err_resp, status = require_auth()

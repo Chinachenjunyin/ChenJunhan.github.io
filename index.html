@@ -14,11 +14,11 @@
     --accent-hover: #8c6640;
     --owner-color: #d48806;
     --danger: #c0392b;
-    --glass-bg: rgba(251, 247, 242, 0.55);
-    --glass-border: rgba(255, 255, 255, 0.45);
-    --glass-shadow: 0 8px 32px rgba(155, 127, 104, 0.12);
-    --tag-bg: rgba(234, 215, 192, 0.5);
-    --tag-text: #8c6640;
+    --glass-bg: rgba(255, 255, 255, 0.18);
+    --glass-border: rgba(255, 255, 255, 0.25);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --tag-bg: rgba(255, 255, 255, 0.2);
+    --tag-text: #6b5540;
     --radius: 16px;
   }
 
@@ -36,7 +36,7 @@
     position: fixed;
     inset: 0;
     z-index: -3;
-    background: url('bg-ref.webp') center/cover no-repeat;
+    background: url('bg.jpg') center/cover no-repeat;
     background-attachment: fixed;
   }
 
@@ -46,11 +46,9 @@
     inset: 0;
     z-index: -2;
     background:
-      radial-gradient(ellipse 80% 70% at 20% 30%, rgba(245, 239, 232, 0.5) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 80% at 75% 60%, rgba(234, 215, 192, 0.35) 0%, transparent 65%),
-      radial-gradient(ellipse 50% 60% at 50% 80%, rgba(201, 165, 125, 0.2) 0%, transparent 65%),
-      radial-gradient(ellipse 70% 50% at 85% 15%, rgba(239, 217, 207, 0.3) 0%, transparent 60%);
-    backdrop-filter: blur(2px) saturate(1.1);
+      radial-gradient(ellipse 80% 70% at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 80% at 75% 60%, rgba(255,255,255,0.06) 0%, transparent 65%);
+    backdrop-filter: blur(1px) saturate(1.05);
   }
 
   .noise-layer {
@@ -61,9 +59,10 @@
   /* ---- nav ---- */
   nav {
     background: rgba(251, 247, 242, 0.75);
-    backdrop-filter: blur(20px) saturate(1.5);
-    -webkit-backdrop-filter: blur(20px) saturate(1.5);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(30px) saturate(1.8);
+    -webkit-backdrop-filter: blur(30px) saturate(1.8);
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.08);
     padding: 0 24px;
     height: 56px;
     display: flex;
@@ -79,6 +78,7 @@
     font-weight: 700;
     color: var(--text);
     cursor: pointer;
+    text-shadow: 0 1px 4px rgba(255,255,255,0.3);
   }
 
   nav .nav-links {
@@ -96,6 +96,7 @@
     background: none;
     font-family: inherit;
     transition: color 0.2s;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.2);
   }
 
   nav .nav-links a:hover, nav .nav-links button:hover { color: var(--accent); }
@@ -190,12 +191,14 @@
   /* ---- post cards ---- */
   .post-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
     border-radius: var(--radius);
     padding: 24px;
     margin-bottom: 16px;
     box-shadow: var(--glass-shadow);
+    border: 1px solid var(--glass-border);
+    transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
     border: 1px solid var(--glass-border);
     transition: all 0.3s ease;
@@ -346,14 +349,15 @@
   }
 
   .modal {
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(30px) saturate(1.8);
+    -webkit-backdrop-filter: blur(30px) saturate(1.8);
     border-radius: var(--radius);
     padding: 32px;
     width: 90%;
     max-width: 420px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    border: 1px solid var(--glass-border);
   }
 
   .modal h2 {
@@ -503,8 +507,8 @@
   /* ---- publish card ---- */
   .publish-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
     border-radius: var(--radius);
     padding: 24px;
     margin-bottom: 24px;
@@ -565,7 +569,8 @@
     width: 100%;
     border-collapse: collapse;
     background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
     border-radius: var(--radius);
     overflow: hidden;
     margin-bottom: 24px;
@@ -617,9 +622,10 @@
     padding: 32px 20px;
     color: var(--text-muted);
     font-size: 13px;
-    border-top: 1px solid rgba(201, 165, 125, 0.2);
-    background: rgba(251, 247, 242, 0.4);
-    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
   }
 
   @media (max-width: 600px) {
@@ -639,6 +645,48 @@
     border: 2px solid rgba(201, 165, 125, 0.5);
     vertical-align: middle;
   }
+
+  .card-thumb {
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .card-thumb-video {
+    width: 100%;
+    max-height: 240px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    display: block;
+    background: #000;
+  }
+
+  .card-preview {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 12px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+  }
+
+  .card-preview img, .card-preview video {
+    display: none;
+  }
+
+  .read-more {
+    color: var(--accent);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .read-more:hover { text-decoration: underline; }
 
   .avatar-lg {
     width: 60px; height: 60px;
@@ -1002,6 +1050,21 @@ async function loadPosts() {
   renderPosts();
 }
 
+function extractPreview(content) {
+  const div = document.createElement('div');
+  div.innerHTML = content;
+  let firstMedia = null;
+  const img = div.querySelector('img');
+  const video = div.querySelector('video');
+  if (img) {
+    firstMedia = { type: 'image', url: img.getAttribute('src') };
+  } else if (video) {
+    firstMedia = { type: 'video', url: video.getAttribute('src') };
+  }
+  const textPreview = div.textContent.replace(/\s+/g, ' ').trim().substring(0, 200);
+  return { firstMedia, textPreview };
+}
+
 function renderPosts() {
   const container = document.getElementById('posts');
   const publishArea = document.getElementById('publishArea');
@@ -1028,15 +1091,28 @@ function renderPosts() {
     if (p.isOwner) {
       tagsHtml = '<span class="owner-tag">站长</span>' + tagsHtml;
     }
+
+    const { firstMedia, textPreview } = extractPreview(p.content);
+    let mediaHtml = '';
+    if (firstMedia) {
+      if (firstMedia.type === 'video') {
+        mediaHtml = `<video class="card-thumb-video" src="${escapeHtml(firstMedia.url)}" controls playsinline preload="metadata"></video>`;
+      } else {
+        mediaHtml = `<img class="card-thumb" src="${escapeHtml(firstMedia.url)}" alt="" loading="lazy">`;
+      }
+    }
+
     return `
-      <article class="post-card" onclick="showPostById('${p.id}')">
-        <h2>${escapeHtml(p.title)}</h2>
+      <article class="post-card">
+        ${mediaHtml}
+        <h2 onclick="showPostById('${p.id}')" style="cursor:pointer">${escapeHtml(p.title)}</h2>
         <div class="post-meta">
           <span>${created}</span>
           <span>${p.authorAvatar ? '<img class="avatar" src="' + escapeHtml(p.authorAvatar) + '" alt="" style="width:18px;height:18px;margin-right:4px">' : ''}${escapeHtml(p.authorName)}</span>
           ${tagsHtml}
         </div>
-        ${p.excerpt ? '<p class="post-excerpt">' + escapeHtml(p.excerpt) + '</p>' : ''}
+        ${textPreview ? '<div class="card-preview">' + textPreview + '</div>' : ''}
+        <a class="read-more" onclick="showPostById('${p.id}')">阅读全文 →</a>
       </article>
     `;
   }).join('');
@@ -1225,10 +1301,28 @@ function showProfile() {
       <label>头像 URL</label>
       <input type="text" id="profileAvatar" value="${escapeHtml(user.avatar || '')}" placeholder="粘贴图片URL或先上传到素材">
     </div>
-    <p style="font-size:12px;color:var(--text-muted);text-align:center">提示：写文章时上传图片获取URL，将URL粘贴过来作为头像</p>
-    <div class="form-actions">
+    <div class="form-actions" style="margin-bottom:8px">
       <button class="btn btn-outline btn-sm" onclick="closeAuth()">取消</button>
       <button class="btn btn-primary btn-sm" onclick="saveProfile()">保存</button>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--glass-border);margin:16px 0">
+    <h3 style="font-size:16px;margin-bottom:12px;text-align:center">修改密码</h3>
+    <div class="error-msg" id="passwordError"></div>
+    <div class="form-group">
+      <label>当前密码</label>
+      <input type="password" id="currentPassword" placeholder="输入当前密码">
+    </div>
+    <div class="form-group">
+      <label>新密码</label>
+      <input type="password" id="newPassword" placeholder="至少6位">
+    </div>
+    <div class="form-group">
+      <label>确认新密码</label>
+      <input type="password" id="confirmPassword" placeholder="再次输入新密码">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeAuth()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="changePassword()">修改密码</button>
     </div>
   `;
   document.getElementById('authModal').classList.add('active');
@@ -1246,12 +1340,33 @@ async function saveProfile() {
       body: JSON.stringify({ username, avatar })
     });
     if (!resp.ok) { const d = await resp.json(); errEl.textContent = d.error; return; }
-    const updated = await resp.json();
     closeAuth();
     const token = localStorage.getItem('token');
     const meResp = await fetch(API + '/me', { headers: { 'Authorization': 'Bearer ' + token } });
     currentUser = await meResp.json();
     updateNav();
+    showList();
+  } catch (e) { errEl.textContent = '网络错误'; }
+}
+
+async function changePassword() {
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value.trim();
+  const confirmPassword = document.getElementById('confirmPassword').value.trim();
+  const errEl = document.getElementById('passwordError');
+  errEl.textContent = '';
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    errEl.textContent = '请填写所有密码字段'; return;
+  }
+  if (newPassword.length < 6) { errEl.textContent = '新密码至少6位'; return; }
+  if (newPassword !== confirmPassword) { errEl.textContent = '两次新密码不一致'; return; }
+  try {
+    const resp = await fetch(API + '/me/password', {
+      method: 'PUT', headers: authHeaders(),
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    if (!resp.ok) { const d = await resp.json(); errEl.textContent = d.error; return; }
+    closeAuth();
     showList();
   } catch (e) { errEl.textContent = '网络错误'; }
 }
