@@ -4,7 +4,12 @@ import time
 import uuid
 import bcrypt
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+TZ = timezone(timedelta(hours=8))
+
+
+def now():
+    return datetime.now(TZ).isoformat()
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 
@@ -52,7 +57,7 @@ def init_data():
             'password': bcrypt.hashpw('admin123'.encode(), bcrypt.gensalt()).decode(),
             'role': 'admin',
             'avatar': '',
-            'createdAt': datetime.now().isoformat()
+            'createdAt': now()
         }
         write_json(USERS_FILE, [owner])
     if not os.path.exists(ARTICLES_FILE):
@@ -170,7 +175,7 @@ def register():
         'password': bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
         'role': 'user',
         'avatar': '',
-        'createdAt': datetime.now().isoformat()
+        'createdAt': now()
     }
     users.append(user)
     write_json(USERS_FILE, users)
@@ -255,8 +260,8 @@ def create_article():
         'content': content,
         'tags': tags,
         'authorId': user['id'],
-        'createdAt': datetime.now().isoformat(),
-        'updatedAt': datetime.now().isoformat()
+        'createdAt': now(),
+        'updatedAt': now()
     }
     articles.append(article)
     write_json(ARTICLES_FILE, articles)
@@ -282,7 +287,7 @@ def update_article(article_id):
         article['content'] = data['content'].strip()
     if 'tags' in data:
         article['tags'] = data['tags']
-    article['updatedAt'] = datetime.now().isoformat()
+    article['updatedAt'] = now()
     write_json(ARTICLES_FILE, articles)
     return jsonify(enrich_article(article))
 
@@ -340,7 +345,7 @@ def create_comment(article_id):
         'content': content,
         'parentId': parentId,
         'replyTo': replyTo,
-        'createdAt': datetime.now().isoformat()
+        'createdAt': now()
     }
     comments = read_json(COMMENTS_FILE)
     comments.append(comment)
