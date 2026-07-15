@@ -2182,7 +2182,28 @@ function hideMusicSearch() {
   document.getElementById('musicOverlay').style.display = 'none';
 }
 
-async function searchMusic() {
+function searchMusic() {
+  const kw = document.getElementById('musicSearchInput').value.trim();
+  if (!kw) return;
+  window.open('https://music.163.com/#/search/m/?s=' + encodeURIComponent(kw), '_blank');
+  alert('在打开的网易云页面中找到歌曲 → 点击分享/复制链接 → 把链接中 id= 后面的数字输入到下方');
+}
+
+function selectMusic(songId, label) {
+  const finalUrl = 'https://music.163.com/song/media/outer/url?id=' + songId + '.mp3';
+  localStorage.setItem('musicUrl', finalUrl);
+  localStorage.setItem('musicLabel', label);
+  localStorage.setItem('musicOn', '1');
+  const audio = document.getElementById('bgMusic');
+  audio.src = finalUrl;
+  audio.load();
+  audio.play().then(() => {
+    document.getElementById('musicBtn').classList.add('playing');
+  }).catch(() => {});
+  hideMusicSearch();
+}
+
+async function searchMusicOnline() {
   const kw = document.getElementById('musicSearchInput').value.trim();
   if (!kw) return;
   const list = document.getElementById('musicSearchList');
@@ -2191,7 +2212,7 @@ async function searchMusic() {
     const resp = await fetch('https://api.uomg.com/api/wy.music.search?key=' + encodeURIComponent(kw));
     const data = await resp.json();
     if (data.code !== 1 || !data.data || !data.data.length) {
-      list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">未找到，<a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="color:var(--accent)">手动输入ID</a></div>';
+      list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">在线搜索失败<br><a href="#" onclick="searchMusic()" style="color:var(--accent)">在网易云中搜索</a></div>';
       return;
     }
     list.innerHTML = data.data.map(s => `
@@ -2201,7 +2222,7 @@ async function searchMusic() {
       </div>
     `).join('');
   } catch (e) {
-    list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">搜索失败<br><a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="color:var(--accent);font-size:12px">手动输入歌曲ID</a></div>';
+    list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">在线搜索不可用<br><a href="#" onclick="searchMusic()" style="color:var(--accent)">在网易云中搜索</a></div>';
   }
 }
 
@@ -2268,15 +2289,30 @@ function setMusicUrlDirect() {
 <div class="modal-overlay" id="musicOverlay" onclick="hideMusicSearch()" style="display:none"></div>
 <div class="music-panel" id="musicPanel">
   <div class="music-panel-header">
-    <span style="font-weight:600;font-size:14px">搜索歌曲</span>
+    <span style="font-weight:600;font-size:14px">选择背景音乐</span>
     <a href="#" onclick="hideMusicSearch()" style="margin-left:auto;font-size:18px;color:var(--text-muted);text-decoration:none">&times;</a>
   </div>
   <div class="music-panel-header">
-    <input type="text" id="musicSearchInput" placeholder="输入歌名..." onkeydown="if(event.key==='Enter')searchMusic()">
-    <button class="btn btn-primary btn-sm" onclick="searchMusic()">搜索</button>
+    <input type="text" id="musicSearchInput" placeholder="输入歌名..." onkeydown="if(event.key==='Enter')searchMusicOnline()">
+    <button class="btn btn-primary btn-sm" onclick="searchMusicOnline()">搜索</button>
   </div>
-  <div class="music-search-list" id="musicSearchList">
-    <div style="padding:10px;color:var(--text-muted);font-size:13px;text-align:center">输入歌名搜索网易云音乐</div>
+  <div class="music-search-list" id="musicSearchList" style="max-height:200px;overflow-y:auto">
+    <div style="padding:8px 10px;font-size:12px;color:var(--text-muted)">热门推荐：</div>
+    <div class="music-item" onclick="selectMusic('186057', '告白气球 - 周杰伦')">
+      <span class="music-item-name">告白气球</span><span class="music-item-artist">周杰伦</span>
+    </div>
+    <div class="music-item" onclick="selectMusic('5253881', '起风了 - 买辣椒也用券')">
+      <span class="music-item-name">起风了</span><span class="music-item-artist">买辣椒也用券</span>
+    </div>
+    <div class="music-item" onclick="selectMusic('1330348068', '错位时空 - 艾辰')">
+      <span class="music-item-name">错位时空</span><span class="music-item-artist">艾辰</span>
+    </div>
+    <div class="music-item" onclick="selectMusic('108308', '青花瓷 - 周杰伦')">
+      <span class="music-item-name">青花瓷</span><span class="music-item-artist">周杰伦</span>
+    </div>
+    <div class="music-item" onclick="selectMusic('447926063', '年少有为 - 李荣浩')">
+      <span class="music-item-name">年少有为</span><span class="music-item-artist">李荣浩</span>
+    </div>
   </div>
   <div style="padding:10px;border-top:1px solid rgba(255,255,255,0.1);text-align:center">
     <a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="font-size:12px;color:var(--accent)">或手动输入歌曲ID</a>
