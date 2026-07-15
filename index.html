@@ -1052,6 +1052,55 @@
     0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
     50% { box-shadow: 0 4px 24px rgba(201,165,125,0.3); }
   }
+
+  .music-panel {
+    position: fixed;
+    bottom: 72px;
+    right: 20px;
+    width: 280px;
+    max-height: 360px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    z-index: 9997;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .music-panel.show { display: flex; }
+  .music-panel-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    gap: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .music-panel-header input {
+    flex: 1;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    background: rgba(255,255,255,0.4);
+    color: var(--text);
+    font-family: inherit;
+    min-width: 0;
+  }
+  .music-panel-header input::placeholder { color: var(--text-muted); }
+  .music-search-list { overflow-y: auto; flex: 1; }
+  .music-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    transition: background 0.15s;
+    color: var(--text);
+  }
+  .music-item:hover { background: rgba(255,255,255,0.25); }
+  .music-item-name { display: block; font-size: 14px; font-weight: 500; }
+  .music-item-artist { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -2089,37 +2138,84 @@ function toggleMusic() {
   const audio = document.getElementById('bgMusic');
   const btn = document.getElementById('musicBtn');
   if (!localStorage.getItem('musicUrl')) {
-    setMusicUrl();
+    showMusicSearch();
     return;
   }
-  if (audio.paused) {
+  if (audio.paused || audio.ended) {
     audio.play().then(() => {
       btn.classList.add('playing');
-      btn.innerHTML = '&#9835;';
       localStorage.setItem('musicOn', '1');
     }).catch(() => {});
   } else {
     audio.pause();
     btn.classList.remove('playing');
-    btn.innerHTML = '&#9835;';
     localStorage.setItem('musicOn', '0');
   }
 }
 
-function setMusicUrl() {
-  const url = prompt('输入音乐直链URL，或网易云音乐歌曲ID（会自动拼接外链）:\n\n网易云获取方法：分享歌曲 → 复制链接 → 链接中 id= 后面的数字', localStorage.getItem('musicUrl') || '');
+function showMusicSearch() {
+  const panel = document.getElementById('musicPanel');
+  if (panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    return;
+  }
+  panel.classList.add('show');
+  document.getElementById('musicSearchInput').focus();
+}
+
+async function searchMusic() {
+  const kw = document.getElementById('musicSearchInput').value.trim();
+  if (!kw) return;
+  const list = document.getElementById('musicSearchList');
+  list.innerHTML = '<div style="padding:12px;color:var(--text-muted)">搜索中...</div>';
+  try {
+    const resp = await fetch('https://api.uomg.com/api/wy.music.search?key=' + encodeURIComponent(kw));
+    const data = await resp.json();
+    if (data.code !== 1 || !data.data || !data.data.length) {
+      list.innerHTML = '<div style="padding:12px;color:var(--text-muted)">未找到歌曲</div>';
+      return;
+    }
+    list.innerHTML = data.data.map((s, i) => `
+      <div class="music-item" onclick="selectMusic('${s.id}', '${escapeHtml(s.name).replace(/'/g, "\\'")} - ${escapeHtml(s.artist).replace(/'/g, "\\'")}')">
+        <span class="music-item-name">${escapeHtml(s.name)}</span>
+        <span class="music-item-artist">${escapeHtml(s.artist)}</span>
+      </div>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="padding:12px;color:var(--text-muted)">搜索失败，请直接输入歌曲ID</div>';
+  }
+}
+
+function selectMusic(songId, label) {
+  const finalUrl = 'https://music.163.com/song/media/outer/url?id=' + songId + '.mp3';
+  localStorage.setItem('musicUrl', finalUrl);
+  localStorage.setItem('musicLabel', label);
+  localStorage.setItem('musicOn', '1');
+  const audio = document.getElementById('bgMusic');
+  audio.src = finalUrl;
+  audio.load();
+  audio.play().then(() => {
+    document.getElementById('musicBtn').classList.add('playing');
+  }).catch(() => {});
+  document.getElementById('musicPanel').classList.remove('show');
+}
+
+function setMusicUrlDirect() {
+  const url = prompt('输入音乐直链URL:', localStorage.getItem('musicUrl') || '');
   if (!url) return;
   let finalUrl = url;
   if (/^\d+$/.test(url)) {
     finalUrl = 'https://music.163.com/song/media/outer/url?id=' + url + '.mp3';
   }
   localStorage.setItem('musicUrl', finalUrl);
+  localStorage.setItem('musicLabel', '自定义');
+  localStorage.setItem('musicOn', '1');
   const audio = document.getElementById('bgMusic');
   audio.src = finalUrl;
   audio.load();
-  if (localStorage.getItem('musicOn') === '1') {
-    audio.play().catch(() => {});
-  }
+  audio.play().then(() => {
+    document.getElementById('musicBtn').classList.add('playing');
+  }).catch(() => {});
 }
 
 (function() {
@@ -2148,7 +2244,15 @@ function setMusicUrl() {
     <input type="checkbox" onchange="dismissLoginToast()">不再提示
   </label>
 </div>
-<audio id="bgMusic" loop preload="auto" src="/uploads/bgm.mp3"></audio>
-<div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="音乐">&#9835;</div>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击切换音乐">&#9835;</div>
+<div class="music-panel" id="musicPanel">
+  <div class="music-panel-header">
+    <input type="text" id="musicSearchInput" placeholder="搜索歌曲..." onkeydown="if(event.key==='Enter')searchMusic()">
+    <button class="btn btn-primary btn-sm" onclick="searchMusic()">搜索</button>
+    <a href="#" onclick="setMusicUrlDirect()" style="font-size:12px;color:var(--accent);margin-left:8px;white-space:nowrap">输入链接</a>
+  </div>
+  <div class="music-search-list" id="musicSearchList"></div>
+</div>
 </body>
 </html>
