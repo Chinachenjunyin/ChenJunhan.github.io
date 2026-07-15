@@ -1538,7 +1538,7 @@ async function showPostById(id) {
       <span>${post.authorAvatar ? '<img class="avatar" src="' + escapeHtml(post.authorAvatar) + '" alt="" style="width:18px;height:18px;margin-right:4px">' : ''}${escapeHtml(post.authorName)}</span>
       ${tagsHtml}
     </div>
-    <div class="post-content">${post.content}</div>
+    <div class="post-content">${post.content.replace(/<img\b/g, '<img loading="lazy" decoding="async"')}</div>
     ${actionsHtml}
     <div class="comment-section" id="commentSection">
       <h3>评论</h3>
