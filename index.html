@@ -2154,6 +2154,17 @@ function toggleMusic() {
   }
 }
 
+// double click or right click opens search panel
+function _bindMusicBtn() {
+  const btn = document.getElementById('musicBtn');
+  if (btn) {
+    btn.addEventListener('dblclick', function(e) { e.preventDefault(); showMusicSearch(); });
+    btn.addEventListener('contextmenu', function(e) { e.preventDefault(); showMusicSearch(); });
+  }
+}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', _bindMusicBtn); }
+else { _bindMusicBtn(); }
+
 function showMusicSearch() {
   const panel = document.getElementById('musicPanel');
   const overlay = document.getElementById('musicOverlay');
@@ -2253,7 +2264,7 @@ function setMusicUrlDirect() {
   </label>
 </div>
 <audio id="bgMusic" loop preload="auto"></audio>
-<div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击切换音乐">&#9835;</div>
+<div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击播放/暂停  |  双击或右键搜索歌曲">&#9835;</div>
 <div class="modal-overlay" id="musicOverlay" onclick="hideMusicSearch()" style="display:none"></div>
 <div class="music-panel" id="musicPanel">
   <div class="music-panel-header">
