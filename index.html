@@ -14,7 +14,7 @@
     --accent-hover: #8c6640;
     --owner-color: #d48806;
     --danger: #c0392b;
-    --glass-bg: rgba(255, 255, 255, 0.28);
+    --glass-bg: rgba(255, 255, 255, 0.45);
     --glass-border: rgba(255, 255, 255, 0.35);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
     --tag-bg: rgba(255, 255, 255, 0.28);
@@ -91,8 +91,8 @@
   /* ---- nav ---- */
   nav {
     background: rgba(251, 247, 242, 0.75);
-    backdrop-filter: blur(30px) saturate(1.8);
-    -webkit-backdrop-filter: blur(30px) saturate(1.8);
+    backdrop-filter: blur(40px) saturate(2.2);
+    -webkit-backdrop-filter: blur(40px) saturate(2.2);
     border-bottom: 1px solid var(--glass-border);
     background: rgba(255,255,255,0.08);
     padding: 0 24px;
@@ -223,8 +223,8 @@
   /* ---- post cards ---- */
   .post-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
     border-radius: var(--radius);
     padding: 24px;
     margin-bottom: 16px;
@@ -371,7 +371,7 @@
     inset: 0;
     z-index: 100;
     background: rgba(0,0,0,0.35);
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(16px) saturate(1.4);
     align-items: center;
     justify-content: center;
   }
@@ -382,8 +382,8 @@
 
   .modal {
     background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(30px) saturate(1.8);
-    -webkit-backdrop-filter: blur(30px) saturate(1.8);
+    backdrop-filter: blur(40px) saturate(2.2);
+    -webkit-backdrop-filter: blur(40px) saturate(2.2);
     border-radius: var(--radius);
     padding: 32px;
     width: 90%;
@@ -525,8 +525,7 @@
   /* ---- collage / album ---- */
   .collage-section {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    border-radius: var(--radius);
+    backdrop-filter: blur(22px) saturate(1.6);    border-radius: var(--radius);
     padding: 16px;
     margin-bottom: 16px;
     border: 1px solid var(--glass-border);
@@ -649,8 +648,8 @@
   /* ---- publish card ---- */
   .publish-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
     border-radius: var(--radius);
     padding: 24px;
     margin-bottom: 24px;
@@ -711,8 +710,8 @@
     width: 100%;
     border-collapse: collapse;
     background: var(--glass-bg);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
     border-radius: var(--radius);
     overflow: hidden;
     margin-bottom: 24px;
@@ -766,8 +765,8 @@
     font-size: 13px;
     border-top: 1px solid var(--glass-border);
     background: var(--glass-bg);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
   }
 
   @media (max-width: 600px) {
@@ -868,8 +867,8 @@
 
   .comment-item {
     background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(28px) saturate(1.8);
+    -webkit-backdrop-filter: blur(28px) saturate(1.8);
     border-radius: 12px;
     padding: 14px 16px;
     margin-bottom: 10px;
@@ -940,8 +939,7 @@
     font-size: 14px;
     font-family: inherit;
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    color: var(--text);
+    backdrop-filter: blur(22px) saturate(1.6);    color: var(--text);
     resize: vertical;
     min-height: 44px;
     max-height: 120px;
@@ -992,8 +990,7 @@
     font-size: 13px;
     font-family: inherit;
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    color: var(--text);
+    backdrop-filter: blur(22px) saturate(1.6);    color: var(--text);
     resize: vertical;
     min-height: 36px;
     max-height: 100px;
