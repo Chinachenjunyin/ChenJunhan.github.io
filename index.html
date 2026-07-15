@@ -538,6 +538,130 @@
     margin: 10px 0;
   }
 
+  /* ---- collage / album ---- */
+  .collage-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--glass-border);
+  }
+
+  .collage-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .collage-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    min-height: 60px;
+    align-items: center;
+  }
+
+  .collage-item {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: grab;
+    transition: border-color 0.2s;
+  }
+
+  .collage-item.dragging {
+    opacity: 0.5;
+    border-color: var(--accent);
+  }
+
+  .collage-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .collage-item .collage-idx {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .collage-item .collage-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .collage-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* ---- collage display in article ---- */
+  .image-collage {
+    display: grid;
+    gap: 6px;
+    margin: 16px 0;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .image-collage.cols-1 { grid-template-columns: 1fr; }
+  .image-collage.cols-2 { grid-template-columns: 1fr 1fr; }
+  .image-collage.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .image-collage.cols-4 { grid-template-columns: 1fr 1fr; }
+
+  .image-collage img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .image-collage.cols-1 img { height: auto; max-height: 500px; }
+
+  .collage-item .collage-arrow {
+    position: absolute;
+    bottom: 2px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    width: 22px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    line-height: 16px;
+    padding: 0;
+  }
+
+  .collage-item .collage-arrow.left { left: 2px; }
+  .collage-item .collage-arrow.right { right: 2px; }
+
   /* ---- publish card ---- */
   .publish-card {
     background: var(--glass-bg);
@@ -1067,6 +1191,15 @@ function showPublish(editPost) {
       </div>
       <div class="media-preview" id="mediaPreview"></div>
     </div>
+    <div class="collage-section">
+      <div class="collage-label">图片拼图（上传多张图片组成拼图，可调整顺序）</div>
+      <input type="file" id="collageFileInput" accept="image/*" onchange="addCollageImages(event)" multiple style="display:none">
+      <div class="collage-grid" id="collageGrid"></div>
+      <div class="collage-actions">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('collageFileInput').click()">+ 添加图片</button>
+        <button class="btn btn-primary btn-sm" onclick="insertCollage()">插入拼图到文章</button>
+      </div>
+    </div>
     <div class="form-actions">
       <button class="btn btn-outline btn-sm" onclick="closePublish()">取消</button>
       <button class="btn btn-primary btn-sm" onclick="${isEdit ? "doUpdate('" + editPost.id + "')" : 'doPublish()'}">${isEdit ? '保存修改' : '发布'}</button>
@@ -1088,7 +1221,9 @@ function showPublish(editPost) {
   });
   window._pubTags = tags;
   window._uploadedMedia = [];
+  window._collageImages = [];
   renderMediaPreview();
+  renderCollage();
 }
 
 function renderTags(tags) {
@@ -1163,6 +1298,85 @@ function insertMedia(url, type) {
   textarea.value = textarea.value.substring(0, start) + tag + textarea.value.substring(end);
   textarea.focus();
   textarea.setSelectionRange(start + tag.length, start + tag.length);
+}
+
+window._collageImages = [];
+
+async function addCollageImages(event) {
+  const files = event.target.files;
+  if (!files.length) return;
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const resp = await fetch(API + '/upload', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }, body: formData
+      });
+      const data = await resp.json();
+      if (resp.ok && data.type === 'image') {
+        window._collageImages.push(data.url);
+      }
+    } catch (e) {}
+  }
+  event.target.value = '';
+  renderCollage();
+}
+
+function renderCollage() {
+  const el = document.getElementById('collageGrid');
+  if (!el) return;
+  const imgs = window._collageImages || [];
+  el.innerHTML = imgs.map((url, i) => `
+    <div class="collage-item" draggable="true"
+         ondragstart="collageDragStart(event, ${i})"
+         ondragover="event.preventDefault()"
+         ondrop="collageDrop(event, ${i})">
+      <img src="${escapeHtml(url)}" alt="">
+      <span class="collage-idx">${i + 1}</span>
+      <span class="collage-remove" onclick="removeCollageItem(${i})">&times;</span>
+      ${i > 0 ? `<button class="collage-arrow left" onclick="event.stopPropagation();moveCollageItem(${i}, -1)">◀</button>` : ''}
+      ${i < imgs.length - 1 ? `<button class="collage-arrow right" onclick="event.stopPropagation();moveCollageItem(${i}, 1)">▶</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function moveCollageItem(from, dir) {
+  const to = from + dir;
+  if (to < 0 || to >= window._collageImages.length) return;
+  const arr = window._collageImages;
+  [arr[from], arr[to]] = [arr[to], arr[from]];
+  renderCollage();
+}
+
+function removeCollageItem(i) {
+  window._collageImages.splice(i, 1);
+  renderCollage();
+}
+
+let collageDragIdx = -1;
+function collageDragStart(e, i) { collageDragIdx = i; }
+function collageDrop(e, i) {
+  e.preventDefault();
+  if (collageDragIdx === -1 || collageDragIdx === i) return;
+  const arr = window._collageImages;
+  const dragged = arr.splice(collageDragIdx, 1)[0];
+  arr.splice(i, 0, dragged);
+  collageDragIdx = -1;
+  renderCollage();
+}
+
+function insertCollage() {
+  const imgs = window._collageImages || [];
+  if (!imgs.length) { alert('请先添加拼图图片'); return; }
+  const cols = imgs.length >= 4 ? 4 : imgs.length;
+  const html = '<div class="image-collage cols-' + cols + '">' +
+    imgs.map(u => '<img src="' + u + '" alt="">').join('') + '</div>';
+  const textarea = document.getElementById('pubContent');
+  if (!textarea) return;
+  const start = textarea.selectionStart;
+  textarea.value = textarea.value.substring(0, start) + html + textarea.value.substring(textarea.selectionEnd);
+  textarea.focus();
+  textarea.setSelectionRange(start + html.length, start + html.length);
 }
 
 async function doPublish() {
