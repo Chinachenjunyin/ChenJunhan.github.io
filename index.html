@@ -1042,7 +1042,7 @@
     <h1 class="page-title">后台管理</h1>
     <div class="admin-tabs">
       <button class="active" onclick="switchAdminTab('articles')">文章管理</button>
-      <button onclick="switchAdminTab('users')">用户管理</button>
+      <button id="adminTabUsers" onclick="switchAdminTab('users')">用户管理</button>
     </div>
     <div id="adminContent"></div>
   </div>
@@ -1089,7 +1089,7 @@ function updateNav() {
       : '';
     let html = '<div class="user-menu">';
     html += '<span class="user-badge" style="cursor:pointer" onclick="showProfile()">' + (avatarHtml ? avatarHtml + ' ' : '') + escapeHtml(currentUser.username) + '</span>';
-    if (currentUser.isOwner) {
+    if (currentUser.role === 'admin') {
       html += '<a href="#" class="admin-link" onclick="showAdmin()">管理</a>';
     }
     html += '<button onclick="showPublish()">写文章</button>';
@@ -1689,12 +1689,15 @@ function showList() {
 }
 
 async function showAdmin() {
-  if (!currentUser || !currentUser.isOwner) return;
+  if (!currentUser || currentUser.role !== 'admin') return;
   document.getElementById('postDetail').classList.remove('active');
   document.getElementById('postList').classList.add('hidden');
   document.getElementById('adminPanel').classList.add('active');
   adminTab = 'articles';
-  document.querySelectorAll('.admin-tabs button').forEach((b, i) => b.classList.toggle('active', i === 0));
+  // only owner sees user management tab
+  document.getElementById('adminTabUsers').style.display = currentUser.isOwner ? '' : 'none';
+  document.querySelectorAll('.admin-tabs button')[0].classList.add('active');
+  document.getElementById('adminTabUsers').classList.remove('active');
   loadAdminArticles();
 }
 
