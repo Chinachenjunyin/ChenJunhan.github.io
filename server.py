@@ -89,6 +89,11 @@ def is_owner(user_dict):
     return user_dict and user_dict.get('email') == OWNER_EMAIL
 
 
+def is_owner_by_id(user_id):
+    u = get_user_by_id(user_id)
+    return u and u.get('email') == OWNER_EMAIL
+
+
 def require_admin():
     user, err_resp, status = require_auth()
     if err_resp:
@@ -303,7 +308,9 @@ def delete_article(article_id):
         return jsonify({'error': '文章不存在'}), 404
     article = articles[idx]
     if article['authorId'] != user['id'] and not is_owner(user):
-        return jsonify({'error': '无权删除此文章'}), 403
+        # 管理员可以删除普通用户文章，但不能删除站长的
+        if not (user.get('role') == 'admin' and not is_owner_by_id(article['authorId'])):
+            return jsonify({'error': '无权删除此文章'}), 403
     articles.pop(idx)
     write_json(ARTICLES_FILE, articles)
     return jsonify({'success': True})
