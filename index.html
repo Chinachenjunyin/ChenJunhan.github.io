@@ -1003,6 +1003,28 @@
     outline: none;
     border-color: var(--accent);
   }
+
+  .toast {
+    position: fixed;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(1.8);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 9999;
+    transition: bottom 0.4s cubic-bezier(.4,0,.2,1);
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .toast.show { bottom: 30px; }
 </style>
 </head>
 <body>
@@ -1129,6 +1151,14 @@ function showAuth(mode) {
     </div>
   `;
   document.getElementById('authModal').classList.add('active');
+}
+
+function showLoginToast() {
+  if (sessionStorage.getItem('toastShown')) return;
+  sessionStorage.setItem('toastShown', '1');
+  const toast = document.getElementById('loginToast');
+  setTimeout(() => toast.classList.add('show'), 800);
+  setTimeout(() => toast.classList.remove('show'), 8000);
 }
 
 function closeAuth() {
@@ -1971,9 +2001,11 @@ function init() {
         if (data.id) {
           currentUser = data;
           updateNav();
+        } else {
+          showLoginToast();
         }
       })
-      .catch(() => {});
+      .catch(() => { showLoginToast(); });
   }
   updateNav();
   loadPosts();
@@ -1981,5 +2013,9 @@ function init() {
 
 init();
 </script>
+<div class="toast" id="loginToast">
+  <span>登录后可发布文章</span>
+  <button class="btn btn-primary btn-sm" onclick="showAuth('login')">登录</button>
+</div>
 </body>
 </html>
