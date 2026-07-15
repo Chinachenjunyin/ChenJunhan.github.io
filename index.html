@@ -2088,14 +2088,16 @@ init();
 function toggleMusic() {
   const audio = document.getElementById('bgMusic');
   const btn = document.getElementById('musicBtn');
+  if (!localStorage.getItem('musicUrl')) {
+    setMusicUrl();
+    return;
+  }
   if (audio.paused) {
     audio.play().then(() => {
       btn.classList.add('playing');
       btn.innerHTML = '&#9835;';
       localStorage.setItem('musicOn', '1');
-    }).catch(() => {
-      alert('请先点击页面任意位置以启用音乐');
-    });
+    }).catch(() => {});
   } else {
     audio.pause();
     btn.classList.remove('playing');
@@ -2104,10 +2106,28 @@ function toggleMusic() {
   }
 }
 
+function setMusicUrl() {
+  const url = prompt('输入音乐直链URL，或网易云音乐歌曲ID（会自动拼接外链）:\n\n网易云获取方法：分享歌曲 → 复制链接 → 链接中 id= 后面的数字', localStorage.getItem('musicUrl') || '');
+  if (!url) return;
+  let finalUrl = url;
+  if (/^\d+$/.test(url)) {
+    finalUrl = 'https://music.163.com/song/media/outer/url?id=' + url + '.mp3';
+  }
+  localStorage.setItem('musicUrl', finalUrl);
+  const audio = document.getElementById('bgMusic');
+  audio.src = finalUrl;
+  audio.load();
+  if (localStorage.getItem('musicOn') === '1') {
+    audio.play().catch(() => {});
+  }
+}
+
 (function() {
+  const savedUrl = localStorage.getItem('musicUrl');
+  const audio = document.getElementById('bgMusic');
+  if (savedUrl) { audio.src = savedUrl; }
   if (localStorage.getItem('musicOn') !== '0') {
     document.addEventListener('click', function play() {
-      const audio = document.getElementById('bgMusic');
       if (audio && audio.paused) {
         audio.play().then(() => {
           document.getElementById('musicBtn').classList.add('playing');
@@ -2115,6 +2135,9 @@ function toggleMusic() {
         }).catch(() => {});
       }
     }, { once: true });
+  }
+  if (localStorage.getItem('musicOn') === '1') {
+    document.getElementById('musicBtn').classList.add('playing');
   }
 })();
 </script>
