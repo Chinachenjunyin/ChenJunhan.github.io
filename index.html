@@ -1023,6 +1023,35 @@
     white-space: nowrap;
   }
   .toast.show { opacity: 1; }
+
+  .music-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    cursor: pointer;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--text);
+    transition: transform 0.2s;
+    user-select: none;
+  }
+  .music-btn:hover { transform: scale(1.1); }
+  .music-btn.playing { animation: musicPulse 2s ease-in-out infinite; }
+  @keyframes musicPulse {
+    0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    50% { box-shadow: 0 4px 24px rgba(201,165,125,0.3); }
+  }
 </style>
 </head>
 <body>
@@ -2056,6 +2085,38 @@ function init() {
 }
 
 init();
+function toggleMusic() {
+  const audio = document.getElementById('bgMusic');
+  const btn = document.getElementById('musicBtn');
+  if (audio.paused) {
+    audio.play().then(() => {
+      btn.classList.add('playing');
+      btn.innerHTML = '&#9835;';
+      localStorage.setItem('musicOn', '1');
+    }).catch(() => {
+      alert('请先点击页面任意位置以启用音乐');
+    });
+  } else {
+    audio.pause();
+    btn.classList.remove('playing');
+    btn.innerHTML = '&#9835;';
+    localStorage.setItem('musicOn', '0');
+  }
+}
+
+(function() {
+  if (localStorage.getItem('musicOn') !== '0') {
+    document.addEventListener('click', function play() {
+      const audio = document.getElementById('bgMusic');
+      if (audio && audio.paused) {
+        audio.play().then(() => {
+          document.getElementById('musicBtn').classList.add('playing');
+          localStorage.setItem('musicOn', '1');
+        }).catch(() => {});
+      }
+    }, { once: true });
+  }
+})();
 </script>
 <div class="toast" id="loginToast">
   <span>登录后可发布文章和评论</span>
@@ -2064,5 +2125,7 @@ init();
     <input type="checkbox" onchange="dismissLoginToast()">不再提示
   </label>
 </div>
+<audio id="bgMusic" loop preload="auto" src="/uploads/bgm.mp3"></audio>
+<div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="音乐">&#9835;</div>
 </body>
 </html>

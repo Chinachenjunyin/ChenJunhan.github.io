@@ -22,7 +22,7 @@ ARTICLES_FILE = os.path.join(DATA_DIR, 'articles.json')
 COMMENTS_FILE = os.path.join(DATA_DIR, 'comments.json')
 UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
 OWNER_EMAIL = '3615744342@qq.com'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'webm', 'mov', 'avi'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'webm', 'mov', 'avi', 'mp3'}
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
