@@ -2006,6 +2006,8 @@ function init() {
         }
       })
       .catch(() => { showLoginToast(); });
+  } else {
+    showLoginToast();
   }
   updateNav();
   loadPosts();
