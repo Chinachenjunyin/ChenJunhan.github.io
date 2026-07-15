@@ -1714,6 +1714,10 @@ async function loadAdminArticles() {
   const el = document.getElementById('adminContent');
   try {
     const resp = await fetch(API + '/admin/articles', { headers: authHeaders() });
+    if (resp.status === 403) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)"><p>权限已变更，请退出后重新登录</p><br><button class="btn btn-primary" onclick="logout()">重新登录</button></div>';
+      return;
+    }
     const articles = await resp.json();
     el.innerHTML = `
       <table class="admin-table">
@@ -1738,6 +1742,10 @@ async function loadAdminUsers() {
   const el = document.getElementById('adminContent');
   try {
     const resp = await fetch(API + '/admin/users', { headers: authHeaders() });
+    if (resp.status === 403) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)"><p>权限已变更，请退出后重新登录</p><br><button class="btn btn-primary" onclick="logout()">重新登录</button></div>';
+      return;
+    }
     const users = await resp.json();
     el.innerHTML = `
       <table class="admin-table">
