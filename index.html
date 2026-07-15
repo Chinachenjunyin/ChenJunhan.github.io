@@ -500,22 +500,6 @@
     object-fit: cover;
   }
 
-  .media-preview-item .media-insert {
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 11px;
-    cursor: pointer;
-    font-family: inherit;
-    white-space: nowrap;
-  }
-
   .media-preview-item .media-remove {
     position: absolute;
     top: 2px;
@@ -1304,6 +1288,7 @@ async function uploadMedia(event) {
       if (!resp.ok) { errEl.textContent = data.error; return; }
       window._uploadedMedia.push(data);
       renderMediaPreview();
+      insertMedia(data.url, data.type);
     } catch (e) { errEl.textContent = '上传失败'; }
   }
   event.target.value = '';
@@ -1324,7 +1309,6 @@ function renderMediaPreview() {
       <div class="media-preview-item">
         ${inner}
         <button class="media-remove" onclick="removeMedia(${i})">&times;</button>
-        <button class="media-insert" onclick="insertMedia('${m.url}', '${m.type}')">插入</button>
       </div>
     `;
   }).join('');
