@@ -1055,17 +1055,18 @@
 
   .music-panel {
     position: fixed;
-    bottom: 72px;
-    right: 20px;
-    width: 280px;
-    max-height: 360px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    max-height: 420px;
     background: var(--glass-bg);
     backdrop-filter: blur(36px) saturate(2.0);
     -webkit-backdrop-filter: blur(36px) saturate(2.0);
     border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    z-index: 9997;
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+    z-index: 10000;
     display: none;
     flex-direction: column;
     overflow: hidden;
@@ -2155,34 +2156,41 @@ function toggleMusic() {
 
 function showMusicSearch() {
   const panel = document.getElementById('musicPanel');
+  const overlay = document.getElementById('musicOverlay');
   if (panel.classList.contains('show')) {
-    panel.classList.remove('show');
+    hideMusicSearch();
     return;
   }
   panel.classList.add('show');
+  overlay.style.display = 'block';
   document.getElementById('musicSearchInput').focus();
+}
+
+function hideMusicSearch() {
+  document.getElementById('musicPanel').classList.remove('show');
+  document.getElementById('musicOverlay').style.display = 'none';
 }
 
 async function searchMusic() {
   const kw = document.getElementById('musicSearchInput').value.trim();
   if (!kw) return;
   const list = document.getElementById('musicSearchList');
-  list.innerHTML = '<div style="padding:12px;color:var(--text-muted)">搜索中...</div>';
+  list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">搜索中...</div>';
   try {
     const resp = await fetch('https://api.uomg.com/api/wy.music.search?key=' + encodeURIComponent(kw));
     const data = await resp.json();
     if (data.code !== 1 || !data.data || !data.data.length) {
-      list.innerHTML = '<div style="padding:12px;color:var(--text-muted)">未找到歌曲</div>';
+      list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">未找到，<a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="color:var(--accent)">手动输入ID</a></div>';
       return;
     }
-    list.innerHTML = data.data.map((s, i) => `
+    list.innerHTML = data.data.map(s => `
       <div class="music-item" onclick="selectMusic('${s.id}', '${escapeHtml(s.name).replace(/'/g, "\\'")} - ${escapeHtml(s.artist).replace(/'/g, "\\'")}')">
         <span class="music-item-name">${escapeHtml(s.name)}</span>
         <span class="music-item-artist">${escapeHtml(s.artist)}</span>
       </div>
     `).join('');
   } catch (e) {
-    list.innerHTML = '<div style="padding:12px;color:var(--text-muted)">搜索失败，请直接输入歌曲ID</div>';
+    list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">搜索失败<br><a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="color:var(--accent);font-size:12px">手动输入歌曲ID</a></div>';
   }
 }
 
@@ -2197,7 +2205,7 @@ function selectMusic(songId, label) {
   audio.play().then(() => {
     document.getElementById('musicBtn').classList.add('playing');
   }).catch(() => {});
-  document.getElementById('musicPanel').classList.remove('show');
+  hideMusicSearch();
 }
 
 function setMusicUrlDirect() {
@@ -2246,13 +2254,22 @@ function setMusicUrlDirect() {
 </div>
 <audio id="bgMusic" loop preload="auto"></audio>
 <div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击切换音乐">&#9835;</div>
+<div class="modal-overlay" id="musicOverlay" onclick="hideMusicSearch()" style="display:none"></div>
 <div class="music-panel" id="musicPanel">
   <div class="music-panel-header">
-    <input type="text" id="musicSearchInput" placeholder="搜索歌曲..." onkeydown="if(event.key==='Enter')searchMusic()">
-    <button class="btn btn-primary btn-sm" onclick="searchMusic()">搜索</button>
-    <a href="#" onclick="setMusicUrlDirect()" style="font-size:12px;color:var(--accent);margin-left:8px;white-space:nowrap">输入链接</a>
+    <span style="font-weight:600;font-size:14px">搜索歌曲</span>
+    <a href="#" onclick="hideMusicSearch()" style="margin-left:auto;font-size:18px;color:var(--text-muted);text-decoration:none">&times;</a>
   </div>
-  <div class="music-search-list" id="musicSearchList"></div>
+  <div class="music-panel-header">
+    <input type="text" id="musicSearchInput" placeholder="输入歌名..." onkeydown="if(event.key==='Enter')searchMusic()">
+    <button class="btn btn-primary btn-sm" onclick="searchMusic()">搜索</button>
+  </div>
+  <div class="music-search-list" id="musicSearchList">
+    <div style="padding:10px;color:var(--text-muted);font-size:13px;text-align:center">输入歌名搜索网易云音乐</div>
+  </div>
+  <div style="padding:10px;border-top:1px solid rgba(255,255,255,0.1);text-align:center">
+    <a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="font-size:12px;color:var(--accent)">或手动输入歌曲ID</a>
+  </div>
 </div>
 </body>
 </html>
