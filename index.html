@@ -1792,10 +1792,11 @@ async function adminEditArticle(id) {
 async function adminDeleteArticle(id) {
   if (!confirm('确认删除这篇文章？')) return;
   try {
-    await fetch(API + '/articles/' + id, { method: 'DELETE', headers: authHeaders() });
+    const resp = await fetch(API + '/articles/' + id, { method: 'DELETE', headers: authHeaders() });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
     loadAdminArticles();
     loadPosts();
-  } catch (e) {}
+  } catch (e) { alert('网络错误'); }
 }
 
 async function changeUserRole(userId, newRole) {
