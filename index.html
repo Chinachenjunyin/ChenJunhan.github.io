@@ -915,6 +915,22 @@
     color: var(--text);
   }
 
+  .comment-image {
+    display: block;
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    object-fit: cover;
+  }
+
+  .comment-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
   .comment-item .comment-delete {
     font-size: 12px;
     color: var(--danger);
@@ -1154,11 +1170,15 @@ function showAuth(mode) {
 }
 
 function showLoginToast() {
-  if (sessionStorage.getItem('toastShown')) return;
-  sessionStorage.setItem('toastShown', '1');
+  if (localStorage.getItem('loginToastDismissed')) return;
   const toast = document.getElementById('loginToast');
   setTimeout(() => toast.classList.add('show'), 800);
-  setTimeout(() => toast.classList.remove('show'), 8000);
+  setTimeout(() => toast.classList.remove('show'), 10000);
+}
+
+function dismissLoginToast() {
+  localStorage.setItem('loginToastDismissed', '1');
+  document.getElementById('loginToast').classList.remove('show');
 }
 
 function closeAuth() {
@@ -1576,7 +1596,15 @@ async function showPostById(id) {
       ${currentUser ? `
         <div class="comment-form">
           <textarea id="commentInput" placeholder="写下你的评论..." rows="1"></textarea>
-          <button class="btn btn-primary btn-sm" onclick="submitComment('${post.id}')">发表</button>
+          <div class="comment-form-actions">
+            <button class="btn btn-primary btn-sm" onclick="submitComment('${post.id}')">发表</button>
+            <label class="btn btn-outline btn-sm" style="cursor:pointer">
+              <input type="file" accept="image/*" onchange="uploadCommentImage(event, 'commentImg')" style="display:none">
+              <img id="commentImg" src="" style="display:none;width:60px;height:60px;object-fit:cover;border-radius:8px;vertical-align:middle">
+              <span id="commentImgBtn">图片</span>
+            </label>
+            <button id="commentImgClear" class="btn btn-outline btn-sm" style="display:none" onclick="clearCommentImage('commentImg')">清除图片</button>
+          </div>
         </div>
       ` : `
         <div class="comment-login-hint">
@@ -1627,7 +1655,7 @@ function renderComment(c, replies, articleId) {
             <span class="comment-time">${formatDate(r.createdAt)}</span>
             ${rCanDelete ? '<button class="comment-delete" onclick="deleteComment(\'' + articleId + '\', \'' + r.id + '\')">删除</button>' : ''}
           </div>
-          <div class="comment-content">${rReply}: ${escapeHtml(r.content)}</div>
+          <div class="comment-content">${r.image ? '<img class="comment-image" src="' + escapeHtml(r.image) + '" alt="" loading="lazy">' : ''}${rReply}: ${escapeHtml(r.content)}</div>
         </div>
       `;
     }).join('') + '</div>';
@@ -1641,7 +1669,7 @@ function renderComment(c, replies, articleId) {
         ${replyHtml}
         ${canDelete ? '<button class="comment-delete" onclick="deleteComment(\'' + articleId + '\', \'' + c.id + '\')">删除</button>' : ''}
       </div>
-      <div class="comment-content">${escapeHtml(c.content)}</div>
+      <div class="comment-content">${c.image ? '<img class="comment-image" src="' + escapeHtml(c.image) + '" alt="" loading="lazy">' : ''}${escapeHtml(c.content)}</div>
       ${repliesHtml}
     </div>
     <div id="replyForm-${c.id}" class="reply-form" style="display:none">
@@ -1689,16 +1717,48 @@ async function submitReply(articleId, parentId) {
 async function submitComment(articleId) {
   const input = document.getElementById('commentInput');
   const content = input.value.trim();
-  if (!content) return;
+  const imgEl = document.getElementById('commentImg');
+  const imgUrl = imgEl ? imgEl.src : '';
+  if (!content && !imgUrl) return;
   try {
     const resp = await fetch(API + '/articles/' + articleId + '/comments', {
       method: 'POST', headers: authHeaders(),
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content, image: imgUrl })
     });
     if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
     input.value = '';
+    clearCommentImage('commentImg');
     loadComments(articleId);
   } catch (e) { alert('网络错误'); }
+}
+
+async function uploadCommentImage(event, imgId) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const resp = await fetch(API + '/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }, body: formData });
+    if (!resp.ok) { alert('上传失败'); return; }
+    const data = await resp.json();
+    const imgEl = document.getElementById(imgId);
+    const btnEl = document.getElementById(imgId + 'Btn');
+    const clearEl = document.getElementById(imgId + 'Clear');
+    imgEl.src = data.url;
+    imgEl.style.display = 'inline';
+    if (btnEl) btnEl.style.display = 'none';
+    if (clearEl) clearEl.style.display = 'inline';
+  } catch (e) { alert('上传失败'); }
+}
+
+function clearCommentImage(imgId) {
+  const imgEl = document.getElementById(imgId);
+  const btnEl = document.getElementById(imgId + 'Btn');
+  const clearEl = document.getElementById(imgId + 'Clear');
+  imgEl.src = '';
+  imgEl.style.display = 'none';
+  if (btnEl) btnEl.style.display = 'inline';
+  if (clearEl) clearEl.style.display = 'none';
 }
 
 async function deleteComment(articleId, commentId) {
@@ -2016,8 +2076,11 @@ function init() {
 init();
 </script>
 <div class="toast" id="loginToast">
-  <span>登录后可发布文章</span>
+  <span>登录后可发布文章和评论</span>
   <button class="btn btn-primary btn-sm" onclick="showAuth('login')">登录</button>
+  <label style="cursor:pointer;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px">
+    <input type="checkbox" onchange="dismissLoginToast()">不再提示
+  </label>
 </div>
 </body>
 </html>

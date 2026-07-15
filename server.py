@@ -331,8 +331,9 @@ def create_comment(article_id):
         return err_resp, status
     data = request.get_json() or {}
     content = data.get('content', '').strip()
-    if not content:
-        return jsonify({'error': '评论内容不能为空'}), 400
+    image = data.get('image', '').strip()
+    if not content and not image:
+        return jsonify({'error': '评论不能为空'}), 400
     if len(content) > 500:
         return jsonify({'error': '评论最多500字'}), 400
     author = get_user_by_id(user['id'])
@@ -350,6 +351,7 @@ def create_comment(article_id):
         'username': author['username'] if author else user.get('username', ''),
         'avatar': author.get('avatar', '') if author else '',
         'content': content,
+        'image': image,
         'parentId': parentId,
         'replyTo': replyTo,
         'createdAt': now()
