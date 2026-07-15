@@ -1142,6 +1142,7 @@
     <div class="admin-tabs">
       <button class="active" onclick="switchAdminTab('articles')">文章管理</button>
       <button id="adminTabUsers" onclick="switchAdminTab('users')">用户管理</button>
+      <button id="adminTabSettings" onclick="switchAdminTab('settings')" style="display:none">站点设置</button>
     </div>
     <div id="adminContent"></div>
   </div>
@@ -1845,20 +1846,22 @@ async function showAdmin() {
   document.getElementById('postList').classList.add('hidden');
   document.getElementById('adminPanel').classList.add('active');
   adminTab = 'articles';
-  // only owner sees user management tab
   document.getElementById('adminTabUsers').style.display = currentUser.isOwner ? '' : 'none';
-  document.querySelectorAll('.admin-tabs button')[0].classList.add('active');
-  document.getElementById('adminTabUsers').classList.remove('active');
+  document.getElementById('adminTabSettings').style.display = currentUser.isOwner ? '' : 'none';
+  document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelector('.admin-tabs button').classList.add('active');
   loadAdminArticles();
 }
 
 async function switchAdminTab(tab) {
   adminTab = tab;
-  document.querySelectorAll('.admin-tabs button').forEach((b, i) => {
-    b.classList.toggle('active', (tab === 'articles' && i === 0) || (tab === 'users' && i === 1));
+  document.querySelectorAll('.admin-tabs button').forEach(b => {
+    const t = b.textContent.includes('文章') ? 'articles' : b.textContent.includes('用户') ? 'users' : 'settings';
+    b.classList.toggle('active', t === tab);
   });
   if (tab === 'articles') loadAdminArticles();
-  else loadAdminUsers();
+  else if (tab === 'users') loadAdminUsers();
+  else loadAdminSettings();
 }
 
 async function loadAdminArticles() {
@@ -1930,6 +1933,62 @@ async function loadAdminUsers() {
       </table>
     `;
   } catch (e) { el.innerHTML = '<p>加载失败</p>'; }
+}
+
+function loadAdminSettings() {
+  const el = document.getElementById('adminContent');
+  const apiUrl = localStorage.getItem('musicApiUrl') || '';
+  el.innerHTML = `
+    <div style="max-width:500px">
+      <h3 style="margin-bottom:12px">网易云音乐 API 配置</h3>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+        配置后可搜索网易云歌曲。API 格式示例：<br>
+        <code>https://api.example.com/search?key=KEYWORD&type=netease</code><br>
+        搜索关键词用 <code>KEYWORD</code> 占位，接口返回格式需为
+        <code>{code:1, data:[{id:"歌曲ID", name:"歌名", artist:"歌手"}]}</code>
+      </p>
+      <div class="form-group">
+        <label>API 搜索地址</label>
+        <input type="text" id="setMusicApi" value="${escapeHtml(apiUrl)}" placeholder="留空则使用默认API" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>测试搜索</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="setTestKw" placeholder="输入歌名测试..." style="flex:1">
+          <button class="btn btn-outline btn-sm" onclick="testMusicApi()">测试</button>
+        </div>
+      </div>
+      <div id="setTestResult" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+      <br>
+      <button class="btn btn-primary" onclick="saveMusicApi()">保存设置</button>
+    </div>
+  `;
+}
+
+async function testMusicApi() {
+  const url = document.getElementById('setMusicApi').value.trim();
+  const kw = document.getElementById('setTestKw').value.trim();
+  const res = document.getElementById('setTestResult');
+  if (!url || !kw) { res.textContent = '请输入API地址和测试关键词'; return; }
+  if (!url.includes('KEYWORD')) { res.textContent = 'API地址必须包含 KEYWORD 占位符'; return; }
+  res.textContent = '测试中...';
+  try {
+    const resp = await fetch(url.replace('KEYWORD', encodeURIComponent(kw)));
+    const data = await resp.json();
+    if (data.code === 1 && data.data && data.data.length) {
+      res.innerHTML = '<span style="color:#4caf50">成功！结果：</span>' + data.data.slice(0,3).map(s => s.name + ' - ' + s.artist).join(', ');
+    } else {
+      res.textContent = '返回数据格式不匹配';
+    }
+  } catch (e) { res.textContent = '请求失败: ' + e.message; }
+}
+
+function saveMusicApi() {
+  const url = document.getElementById('setMusicApi').value.trim();
+  if (url && !url.includes('KEYWORD')) { alert('API地址必须包含 KEYWORD 占位符'); return; }
+  localStorage.setItem('musicApiUrl', url);
+  alert('保存成功');
+  loadAdminSettings();
 }
 
 async function adminEditArticle(id) {
@@ -2208,11 +2267,15 @@ async function searchMusicOnline() {
   if (!kw) return;
   const list = document.getElementById('musicSearchList');
   list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">搜索中...</div>';
+  const apiUrl = localStorage.getItem('musicApiUrl');
+  const searchUrl = apiUrl
+    ? apiUrl.replace('KEYWORD', encodeURIComponent(kw))
+    : 'https://api.uomg.com/api/wy.music.search?key=' + encodeURIComponent(kw);
   try {
-    const resp = await fetch('https://api.uomg.com/api/wy.music.search?key=' + encodeURIComponent(kw));
+    const resp = await fetch(searchUrl);
     const data = await resp.json();
     if (data.code !== 1 || !data.data || !data.data.length) {
-      list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">在线搜索失败<br><a href="#" onclick="searchMusic()" style="color:var(--accent)">在网易云中搜索</a></div>';
+      list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">未找到<br><a href="#" onclick="searchMusic()" style="color:var(--accent)">在网易云中搜索</a></div>';
       return;
     }
     list.innerHTML = data.data.map(s => `
@@ -2222,7 +2285,7 @@ async function searchMusicOnline() {
       </div>
     `).join('');
   } catch (e) {
-    list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">在线搜索不可用<br><a href="#" onclick="searchMusic()" style="color:var(--accent)">在网易云中搜索</a></div>';
+    list.innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center">搜索失败<br><a href="#" onclick="searchMusic()" style="color:var(--accent)">在网易云中搜索</a></div>';
   }
 }
 
