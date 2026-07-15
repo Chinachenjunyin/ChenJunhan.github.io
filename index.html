@@ -1762,6 +1762,7 @@ async function loadAdminUsers() {
               } else {
                 actionHtml = '<button class="btn btn-outline btn-sm" onclick="changeUserRole(\'' + u.id + '\', \'user\')">降为普通用户</button>';
               }
+              actionHtml += ' <button class="btn btn-outline btn-sm" onclick="showResetPwd(\'' + u.id + '\', \'' + escapeHtml(u.username).replace(/'/g, "\\'") + '\')">重置密码</button>';
             }
             return `
             <tr>
@@ -1805,6 +1806,24 @@ async function changeUserRole(userId, newRole) {
       body: JSON.stringify({ role: newRole })
     });
     if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    loadAdminUsers();
+  } catch (e) { alert('网络错误'); }
+}
+
+function showResetPwd(userId, username) {
+  const pwd = prompt('为 ' + username + ' 输入新密码（至少6位）:');
+  if (!pwd || pwd.length < 6) { alert('密码至少6位'); return; }
+  resetUserPwd(userId, pwd);
+}
+
+async function resetUserPwd(userId, newPwd) {
+  try {
+    const resp = await fetch(API + '/admin/users/' + userId + '/reset-password', {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ password: newPwd })
+    });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    alert('密码已重置');
     loadAdminUsers();
   } catch (e) { alert('网络错误'); }
 }

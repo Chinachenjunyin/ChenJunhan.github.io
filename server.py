@@ -427,6 +427,24 @@ def update_user_role(user_id):
     return jsonify(user_public(target))
 
 
+@app.route('/api/admin/users/<user_id>/reset-password', methods=['POST'])
+def reset_user_password(user_id):
+    user, err_resp, status = require_owner()
+    if err_resp:
+        return err_resp, status
+    data = request.get_json() or {}
+    new_pwd = data.get('password', '')
+    if len(new_pwd) < 6:
+        return jsonify({'error': '密码至少6位'}), 400
+    users = read_json(USERS_FILE)
+    idx = next((i for i, u in enumerate(users) if u['id'] == user_id), None)
+    if idx is None:
+        return jsonify({'error': '用户不存在'}), 404
+    users[idx]['password'] = bcrypt.hashpw(new_pwd.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    write_json(USERS_FILE, users)
+    return jsonify({'message': '密码已重置'})
+
+
 @app.route('/api/me/avatar', methods=['PUT'])
 def update_avatar():
     user, err_resp, status = require_auth()
