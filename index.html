@@ -2210,22 +2210,30 @@ function init() {
 
 init();
 function toggleMusic() {
-  const btn = document.getElementById('musicBtn');
-  if (!localStorage.getItem('musicUrl')) {
+  var id = localStorage.getItem('musicId');
+  // migrate old URL format
+  if (!id) {
+    var oldUrl = localStorage.getItem('musicUrl');
+    if (oldUrl) {
+      var m = oldUrl.match(/[?&]id=(\d+)/);
+      if (m) { id = m[1]; localStorage.setItem('musicId', id); }
+    }
+  }
+  if (!id) {
     showMusicSearch();
     return;
   }
-  const bar = document.getElementById('musicBar');
-  if (bar.style.display === 'none' || !bar.style.display) {
-    showMusicBar();
-  } else {
+  var btn = document.getElementById('musicBtn');
+  if (btn.classList.contains('playing')) {
     hideMusicBar();
+  } else {
+    showMusicBar();
   }
 }
 
 function showMusicBar() {
-  const bar = document.getElementById('musicBar');
-  const sid = localStorage.getItem('musicId') || '41655239';
+  var bar = document.getElementById('musicBar');
+  var sid = localStorage.getItem('musicId') || '41655239';
   bar.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=340 height=52 src="https://music.163.com/outchain/player?type=2&id=' + sid + '&auto=1&height=32"></iframe>';
   bar.style.display = 'block';
   document.getElementById('musicBtn').classList.add('playing');
@@ -2234,6 +2242,7 @@ function showMusicBar() {
 
 function hideMusicBar() {
   document.getElementById('musicBar').style.display = 'none';
+  document.getElementById('musicBar').innerHTML = '';
   document.getElementById('musicBtn').classList.remove('playing');
   localStorage.setItem('musicOn', '0');
 }
