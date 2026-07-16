@@ -2234,7 +2234,7 @@ function toggleMusic() {
 function showMusicBar() {
   var bar = document.getElementById('musicBar');
   var sid = localStorage.getItem('musicId') || '41655239';
-  bar.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=340 height=52 src="https://music.163.com/outchain/player?type=2&id=' + sid + '&auto=1&height=32"></iframe>';
+  bar.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=340 height=86 src="https://music.163.com/outchain/player?type=2&id=' + sid + '&auto=1&height=66"></iframe>';
   bar.style.display = 'block';
   document.getElementById('musicBtn').classList.add('playing');
   localStorage.setItem('musicOn', '1');
