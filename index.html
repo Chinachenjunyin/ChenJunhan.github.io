@@ -1062,8 +1062,6 @@
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 24px rgba(0,0,0,0.2);
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(20px);
   }
   .music-bar iframe {
     display: block;
@@ -2228,7 +2226,7 @@ function toggleMusic() {
 function showMusicBar() {
   const bar = document.getElementById('musicBar');
   const sid = localStorage.getItem('musicId') || '41655239';
-  bar.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=340 height=52 src="//music.163.com/outchain/player?type=2&id=' + sid + '&auto=1&height=32"></iframe>';
+  bar.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=340 height=52 src="https://music.163.com/outchain/player?type=2&id=' + sid + '&auto=1&height=32"></iframe>';
   bar.style.display = 'block';
   document.getElementById('musicBtn').classList.add('playing');
   localStorage.setItem('musicOn', '1');
@@ -2359,14 +2357,14 @@ function setMusicUrlDirect() {
   </div>
   <div class="music-search-list" id="musicSearchList" style="max-height:200px;overflow-y:auto">
     <div style="padding:8px 10px;font-size:12px;color:var(--text-muted)">热门推荐：</div>
+    <div class="music-item" onclick="selectMusic('41655239', '鬼新娘 - 杰儿合唱团')">
+      <span class="music-item-name">鬼新娘</span><span class="music-item-artist">杰儿合唱团</span>
+    </div>
     <div class="music-item" onclick="selectMusic('186057', '告白气球 - 周杰伦')">
       <span class="music-item-name">告白气球</span><span class="music-item-artist">周杰伦</span>
     </div>
     <div class="music-item" onclick="selectMusic('5253881', '起风了 - 买辣椒也用券')">
       <span class="music-item-name">起风了</span><span class="music-item-artist">买辣椒也用券</span>
-    </div>
-    <div class="music-item" onclick="selectMusic('1330348068', '错位时空 - 艾辰')">
-      <span class="music-item-name">错位时空</span><span class="music-item-artist">艾辰</span>
     </div>
     <div class="music-item" onclick="selectMusic('108308', '青花瓷 - 周杰伦')">
       <span class="music-item-name">青花瓷</span><span class="music-item-artist">周杰伦</span>
