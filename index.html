@@ -1053,6 +1053,23 @@
     50% { box-shadow: 0 4px 24px rgba(201,165,125,0.3); }
   }
 
+  .music-bar {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+  }
+  .music-bar iframe {
+    display: block;
+    border: none;
+  }
+
   .music-panel {
     position: fixed;
     top: 50%;
@@ -2195,22 +2212,32 @@ function init() {
 
 init();
 function toggleMusic() {
-  const audio = document.getElementById('bgMusic');
   const btn = document.getElementById('musicBtn');
   if (!localStorage.getItem('musicUrl')) {
     showMusicSearch();
     return;
   }
-  if (audio.paused || audio.ended) {
-    audio.play().then(() => {
-      btn.classList.add('playing');
-      localStorage.setItem('musicOn', '1');
-    }).catch(() => {});
+  const bar = document.getElementById('musicBar');
+  if (bar.style.display === 'none' || !bar.style.display) {
+    showMusicBar();
   } else {
-    audio.pause();
-    btn.classList.remove('playing');
-    localStorage.setItem('musicOn', '0');
+    hideMusicBar();
   }
+}
+
+function showMusicBar() {
+  const bar = document.getElementById('musicBar');
+  const sid = localStorage.getItem('musicId') || '41655239';
+  bar.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=340 height=52 src="//music.163.com/outchain/player?type=2&id=' + sid + '&auto=1&height=32"></iframe>';
+  bar.style.display = 'block';
+  document.getElementById('musicBtn').classList.add('playing');
+  localStorage.setItem('musicOn', '1');
+}
+
+function hideMusicBar() {
+  document.getElementById('musicBar').style.display = 'none';
+  document.getElementById('musicBtn').classList.remove('playing');
+  localStorage.setItem('musicOn', '0');
 }
 
 // double click or right click opens search panel
@@ -2290,53 +2317,24 @@ async function searchMusicOnline() {
 }
 
 function selectMusic(songId, label) {
-  const finalUrl = 'https://music.163.com/song/media/outer/url?id=' + songId + '.mp3';
-  localStorage.setItem('musicUrl', finalUrl);
+  localStorage.setItem('musicId', songId);
+  localStorage.setItem('musicUrl', songId);
   localStorage.setItem('musicLabel', label);
   localStorage.setItem('musicOn', '1');
-  const audio = document.getElementById('bgMusic');
-  audio.src = finalUrl;
-  audio.load();
-  audio.play().then(() => {
-    document.getElementById('musicBtn').classList.add('playing');
-  }).catch(() => {});
+  showMusicBar();
   hideMusicSearch();
 }
 
 function setMusicUrlDirect() {
-  const url = prompt('输入音乐直链URL:', localStorage.getItem('musicUrl') || '');
-  if (!url) return;
-  let finalUrl = url;
-  if (/^\d+$/.test(url)) {
-    finalUrl = 'https://music.163.com/song/media/outer/url?id=' + url + '.mp3';
-  }
-  localStorage.setItem('musicUrl', finalUrl);
-  localStorage.setItem('musicLabel', '自定义');
-  localStorage.setItem('musicOn', '1');
-  const audio = document.getElementById('bgMusic');
-  audio.src = finalUrl;
-  audio.load();
-  audio.play().then(() => {
-    document.getElementById('musicBtn').classList.add('playing');
-  }).catch(() => {});
+  const id = prompt('输入网易云歌曲ID：', localStorage.getItem('musicId') || '');
+  if (!id) return;
+  selectMusic(id.trim(), '自定义');
 }
 
 (function() {
-  const savedUrl = localStorage.getItem('musicUrl');
-  const audio = document.getElementById('bgMusic');
-  if (savedUrl) { audio.src = savedUrl; }
-  if (localStorage.getItem('musicOn') !== '0') {
-    document.addEventListener('click', function play() {
-      if (audio && audio.paused) {
-        audio.play().then(() => {
-          document.getElementById('musicBtn').classList.add('playing');
-          localStorage.setItem('musicOn', '1');
-        }).catch(() => {});
-      }
-    }, { once: true });
-  }
   if (localStorage.getItem('musicOn') === '1') {
     document.getElementById('musicBtn').classList.add('playing');
+    setTimeout(function() { showMusicBar(); }, 500);
   }
 })();
 </script>
@@ -2347,8 +2345,8 @@ function setMusicUrlDirect() {
     <input type="checkbox" onchange="dismissLoginToast()">不再提示
   </label>
 </div>
-<audio id="bgMusic" loop preload="auto"></audio>
-<div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击播放/暂停  |  双击或右键搜索歌曲">&#9835;</div>
+<div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击显示/隐藏音乐播放器 | 双击搜索歌曲">&#9835;</div>
+<div class="music-bar" id="musicBar" style="display:none"></div>
 <div class="modal-overlay" id="musicOverlay" onclick="hideMusicSearch()" style="display:none"></div>
 <div class="music-panel" id="musicPanel">
   <div class="music-panel-header">
