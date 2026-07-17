@@ -1059,9 +1059,94 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 9999;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+    background: var(--glass-bg);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    max-width: 420px;
+    width: calc(100vw - 32px);
+  }
+  .mbar-btn {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .mbar-title {
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    flex-shrink: 0;
+  }
+  .mbar-progress {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    min-width: 40px;
+  }
+  .mbar-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.15s linear;
+    pointer-events: none;
+  }
+  .mbar-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 32px;
+    text-align: right;
+  }
+  .mbar-vol-wrap {
+    flex-shrink: 0;
+    width: 60px;
+  }
+  .mbar-vol {
+    width: 100%;
+    height: 3px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .mbar-vol::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+  .mbar-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px;
+    line-height: 1;
+    flex-shrink: 0;
   }
   .music-bar iframe {
     display: block;
@@ -2211,7 +2296,6 @@ function init() {
 init();
 function toggleMusic() {
   var id = localStorage.getItem('musicId');
-  // migrate old URL format
   if (!id) {
     var oldUrl = localStorage.getItem('musicUrl');
     if (oldUrl) {
@@ -2232,19 +2316,71 @@ function toggleMusic() {
 }
 
 function showMusicBar() {
-  var bar = document.getElementById('musicBar');
+  var audio = document.getElementById('bgMusic');
   var sid = localStorage.getItem('musicId') || '41655239';
-  bar.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=340 height=86 src="https://music.163.com/outchain/player?type=2&id=' + sid + '&auto=1&height=66"></iframe>';
-  bar.style.display = 'block';
+  var src = 'https://music.163.com/song/media/outer/url?id=' + sid + '.mp3';
+  if (audio.src !== src || audio.getAttribute('data-id') !== sid) {
+    audio.src = src;
+    audio.setAttribute('data-id', sid);
+    audio.load();
+  }
+  audio.volume = (parseInt(localStorage.getItem('musicVol')) || 50) / 100;
+  document.getElementById('mbarVol').value = localStorage.getItem('musicVol') || 50;
+  document.getElementById('mbarTitle').textContent = localStorage.getItem('musicLabel') || '网易云音乐';
+  document.getElementById('musicBar').style.display = 'flex';
   document.getElementById('musicBtn').classList.add('playing');
   localStorage.setItem('musicOn', '1');
+  audio.play().catch(function(){});
+  audio.addEventListener('timeupdate', mbarUpdate);
 }
 
 function hideMusicBar() {
+  var audio = document.getElementById('bgMusic');
+  audio.pause();
+  audio.removeEventListener('timeupdate', mbarUpdate);
   document.getElementById('musicBar').style.display = 'none';
-  document.getElementById('musicBar').innerHTML = '';
   document.getElementById('musicBtn').classList.remove('playing');
   localStorage.setItem('musicOn', '0');
+}
+
+function mbarToggle() {
+  var audio = document.getElementById('bgMusic');
+  var btn = document.getElementById('mbarPlay');
+  if (audio.paused) {
+    audio.play();
+    btn.innerHTML = '&#10074;&#10074;';
+  } else {
+    audio.pause();
+    btn.innerHTML = '&#9654;';
+  }
+}
+
+var _mbarTimer = 0;
+function mbarUpdate() {
+  var audio = document.getElementById('bgMusic');
+  var btn = document.getElementById('mbarPlay');
+  btn.innerHTML = audio.paused ? '&#9654;' : '&#10074;&#10074;';
+  if (!audio.paused && audio.duration) {
+    var pct = (audio.currentTime / audio.duration) * 100;
+    document.getElementById('mbarFill').style.width = pct + '%';
+    var m = Math.floor(audio.currentTime / 60);
+    var s = Math.floor(audio.currentTime % 60);
+    document.getElementById('mbarTime').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  }
+}
+
+function mbarSeek(e) {
+  var audio = document.getElementById('bgMusic');
+  if (!audio.duration) return;
+  var rect = e.target.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+}
+
+function mbarVolume() {
+  var v = document.getElementById('mbarVol').value;
+  document.getElementById('bgMusic').volume = v / 100;
+  localStorage.setItem('musicVol', v);
 }
 
 // double click or right click opens search panel
@@ -2280,20 +2416,6 @@ function searchMusic() {
   if (!kw) return;
   window.open('https://music.163.com/#/search/m/?s=' + encodeURIComponent(kw), '_blank');
   alert('在打开的网易云页面中找到歌曲 → 点击分享/复制链接 → 把链接中 id= 后面的数字输入到下方');
-}
-
-function selectMusic(songId, label) {
-  const finalUrl = 'https://music.163.com/song/media/outer/url?id=' + songId + '.mp3';
-  localStorage.setItem('musicUrl', finalUrl);
-  localStorage.setItem('musicLabel', label);
-  localStorage.setItem('musicOn', '1');
-  const audio = document.getElementById('bgMusic');
-  audio.src = finalUrl;
-  audio.load();
-  audio.play().then(() => {
-    document.getElementById('musicBtn').classList.add('playing');
-  }).catch(() => {});
-  hideMusicSearch();
 }
 
 async function searchMusicOnline() {
@@ -2353,7 +2475,19 @@ function setMusicUrlDirect() {
   </label>
 </div>
 <div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击显示/隐藏音乐播放器 | 双击搜索歌曲">&#9835;</div>
-<div class="music-bar" id="musicBar" style="display:none"></div>
+<audio id="bgMusic" loop style="display:none"></audio>
+<div class="music-bar" id="musicBar" style="display:none">
+  <button class="mbar-btn" id="mbarPlay" onclick="mbarToggle()">&#9654;</button>
+  <span class="mbar-title" id="mbarTitle">未选择</span>
+  <div class="mbar-progress" id="mbarProgress" onclick="mbarSeek(event)">
+    <div class="mbar-progress-fill" id="mbarFill"></div>
+  </div>
+  <span class="mbar-time" id="mbarTime">0:00</span>
+  <div class="mbar-vol-wrap">
+    <input type="range" class="mbar-vol" id="mbarVol" min="0" max="100" value="50" oninput="mbarVolume()">
+  </div>
+  <button class="mbar-close" onclick="hideMusicBar()">&times;</button>
+</div>
 <div class="modal-overlay" id="musicOverlay" onclick="hideMusicSearch()" style="display:none"></div>
 <div class="music-panel" id="musicPanel">
   <div class="music-panel-header">
