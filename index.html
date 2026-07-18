@@ -2318,8 +2318,8 @@ function toggleMusic() {
 function showMusicBar() {
   var audio = document.getElementById('bgMusic');
   var sid = localStorage.getItem('musicId') || '41655239';
-  var src = 'https://music.163.com/song/media/outer/url?id=' + sid + '.mp3';
-  if (audio.src !== src || audio.getAttribute('data-id') !== sid) {
+  var src = API + '/music/stream/' + sid;
+  if (audio.getAttribute('data-id') !== sid) {
     audio.src = src;
     audio.setAttribute('data-id', sid);
     audio.load();

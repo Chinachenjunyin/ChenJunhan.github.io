@@ -511,6 +511,32 @@ def update_me():
     return jsonify(user_public(users[idx]))
 
 
+@app.route('/api/music/stream/<song_id>')
+def music_stream(song_id):
+    import urllib.request
+    url = 'https://music.163.com/song/media/outer/url?id=' + song_id + '.mp3'
+    try:
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Referer': 'https://music.163.com/'
+        })
+        resp = urllib.request.urlopen(req, timeout=10)
+        if 'audio/mpeg' in resp.getheader('Content-Type', ''):
+            from flask import Response
+            return Response(resp.read(), mimetype='audio/mpeg')
+        actual_url = resp.geturl()
+        if actual_url != url and actual_url.startswith('http'):
+            req2 = urllib.request.Request(actual_url, headers={
+                'User-Agent': 'Mozilla/5.0',
+                'Referer': 'https://music.163.com/'
+            })
+            resp2 = urllib.request.urlopen(req2, timeout=10)
+            return Response(resp2.read(), mimetype='audio/mpeg')
+        return jsonify({'error': '无法获取音频'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
