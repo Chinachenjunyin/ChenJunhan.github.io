@@ -2490,6 +2490,23 @@ function setMusicUrlDirect() {
   showMusicBar();
 }
 
+function debugMusic() {
+  var oldUrl = localStorage.getItem('musicUrl') || '';
+  var oldLabel = localStorage.getItem('musicLabel') || '';
+  localStorage.removeItem('musicUrl');
+  localStorage.removeItem('musicId');
+  localStorage.removeItem('musicLabel');
+  localStorage.removeItem('musicOn');
+  localStorage.removeItem('musicVol');
+  var audio = document.getElementById('bgMusic');
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.removeAttribute('data-url');
+  audio.load();
+  hideMusicBar();
+  alert('已清除。之前的音乐: ' + oldLabel + '\nURL: ' + oldUrl + '\n\n请重新上传或输入直链。');
+}
+
 (function() {
   if (localStorage.getItem('musicOn') === '1') {
     document.getElementById('musicBtn').classList.add('playing');
@@ -2505,7 +2522,7 @@ function setMusicUrlDirect() {
   </label>
 </div>
 <div class="music-btn" id="musicBtn" onclick="toggleMusic()" title="点击显示/隐藏音乐播放器 | 双击搜索歌曲">&#9835;</div>
-<audio id="bgMusic" loop style="display:none"></audio>
+<audio id="bgMusic" loop style="display:none" onerror="document.getElementById('mbarTitle').textContent='播放失败: ' + (document.getElementById('bgMusic').error ? document.getElementById('bgMusic').error.message : '未知')" onloadeddata="document.getElementById('mbarTitle').textContent=localStorage.getItem('musicLabel')||'背景音乐'"></audio>
 <div class="music-bar" id="musicBar" style="display:none">
   <button class="mbar-btn" id="mbarPlay" onclick="mbarToggle()">&#9654;</button>
   <span class="mbar-title" id="mbarTitle">未选择</span>
@@ -2531,10 +2548,16 @@ function setMusicUrlDirect() {
       <span class="music-item-artist">从本地上传，最稳定</span>
     </div>
     <input type="file" id="musicFileInput" accept="audio/mpeg" onchange="uploadMusicFile(event)" style="display:none">
-    <div style="padding:8px 10px;font-size:12px;color:var(--text-muted);border-top:1px solid rgba(255,255,255,0.1)">或输入直链播放：</div>
+    <div style="padding:8px 10px;font-size:12px;color:var(--text-muted);border-top:1px solid rgba(255,255,255,0.1)">或输入直链：</div>
     <div class="music-item" onclick="setMusicUrlDirect()">
       <span class="music-item-name">输入音乐直链</span>
       <span class="music-item-artist">粘贴 MP3 直链地址</span>
+    </div>
+    <div style="padding:8px 10px;font-size:12px;color:var(--text-muted);border-top:1px solid rgba(255,255,255,0.1)">调试：</div>
+    <div class="music-item" onclick="debugMusic()">
+      <span class="music-item-name">清除缓存重试</span>
+      <span class="music-item-artist">清除音乐设置后重新选择</span>
+    </div>
     </div>
   </div>
   <div style="padding:10px;border-top:1px solid rgba(255,255,255,0.1);text-align:center">
