@@ -2295,15 +2295,8 @@ function init() {
 
 init();
 function toggleMusic() {
-  var id = localStorage.getItem('musicId');
-  if (!id) {
-    var oldUrl = localStorage.getItem('musicUrl');
-    if (oldUrl) {
-      var m = oldUrl.match(/[?&]id=(\d+)/);
-      if (m) { id = m[1]; localStorage.setItem('musicId', id); }
-    }
-  }
-  if (!id) {
+  var hasMusic = localStorage.getItem('musicUrl') || localStorage.getItem('musicId');
+  if (!hasMusic) {
     showMusicSearch();
     return;
   }
@@ -2317,21 +2310,45 @@ function toggleMusic() {
 
 function showMusicBar() {
   var audio = document.getElementById('bgMusic');
-  var sid = localStorage.getItem('musicId') || '41655239';
-  var src = API + '/music/stream/' + sid;
-  if (audio.getAttribute('data-id') !== sid) {
-    audio.src = src;
-    audio.setAttribute('data-id', sid);
+  var musicUrl = localStorage.getItem('musicUrl');
+  var musicLabel = localStorage.getItem('musicLabel') || '背景音乐';
+  if (!musicUrl) { musicUrl = 'https://music.163.com/song/media/outer/url?id=' + (localStorage.getItem('musicId') || '41655239') + '.mp3'; localStorage.setItem('musicUrl', musicUrl); }
+  if (audio.getAttribute('data-url') !== musicUrl) {
+    audio.src = musicUrl;
+    audio.setAttribute('data-url', musicUrl);
     audio.load();
   }
   audio.volume = (parseInt(localStorage.getItem('musicVol')) || 50) / 100;
   document.getElementById('mbarVol').value = localStorage.getItem('musicVol') || 50;
-  document.getElementById('mbarTitle').textContent = localStorage.getItem('musicLabel') || '网易云音乐';
+  document.getElementById('mbarTitle').textContent = musicLabel;
   document.getElementById('musicBar').style.display = 'flex';
   document.getElementById('musicBtn').classList.add('playing');
   localStorage.setItem('musicOn', '1');
   audio.play().catch(function(){});
   audio.addEventListener('timeupdate', mbarUpdate);
+}
+
+async function uploadMusicFile(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var formData = new FormData();
+  formData.append('file', file);
+  try {
+    var resp = await fetch(API + '/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }, body: formData });
+    var data = await resp.json();
+    if (resp.ok && data.url) {
+      var label = file.name.replace(/\.(mp3|MP3)$/, '');
+      localStorage.setItem('musicUrl', data.url);
+      localStorage.setItem('musicId', '');
+      localStorage.setItem('musicLabel', label);
+      localStorage.setItem('musicOn', '1');
+      hideMusicSearch();
+      showMusicBar();
+    } else {
+      alert('上传失败');
+    }
+  } catch(e) { alert('上传失败'); }
+  event.target.value = '';
 }
 
 function hideMusicBar() {
@@ -2447,17 +2464,22 @@ async function searchMusicOnline() {
 
 function selectMusic(songId, label) {
   localStorage.setItem('musicId', songId);
-  localStorage.setItem('musicUrl', songId);
+  localStorage.setItem('musicUrl', '');
   localStorage.setItem('musicLabel', label);
   localStorage.setItem('musicOn', '1');
-  showMusicBar();
   hideMusicSearch();
+  showMusicBar();
 }
 
 function setMusicUrlDirect() {
-  const id = prompt('输入网易云歌曲ID：', localStorage.getItem('musicId') || '');
-  if (!id) return;
-  selectMusic(id.trim(), '自定义');
+  var url = prompt('输入音乐直链URL（MP3格式）：', localStorage.getItem('musicUrl') || '');
+  if (!url) return;
+  localStorage.setItem('musicUrl', url);
+  localStorage.setItem('musicId', '');
+  localStorage.setItem('musicLabel', '自定义音乐');
+  localStorage.setItem('musicOn', '1');
+  hideMusicSearch();
+  showMusicBar();
 }
 
 (function() {
@@ -2494,30 +2516,21 @@ function setMusicUrlDirect() {
     <span style="font-weight:600;font-size:14px">选择背景音乐</span>
     <a href="#" onclick="hideMusicSearch()" style="margin-left:auto;font-size:18px;color:var(--text-muted);text-decoration:none">&times;</a>
   </div>
-  <div class="music-panel-header">
-    <input type="text" id="musicSearchInput" placeholder="输入歌名..." onkeydown="if(event.key==='Enter')searchMusicOnline()">
-    <button class="btn btn-primary btn-sm" onclick="searchMusicOnline()">搜索</button>
-  </div>
   <div class="music-search-list" id="musicSearchList" style="max-height:200px;overflow-y:auto">
-    <div style="padding:8px 10px;font-size:12px;color:var(--text-muted)">热门推荐：</div>
-    <div class="music-item" onclick="selectMusic('41655239', '鬼新娘 - 杰儿合唱团')">
-      <span class="music-item-name">鬼新娘</span><span class="music-item-artist">杰儿合唱团</span>
+    <div style="padding:8px 10px;font-size:12px;color:var(--text-muted)">上传你自己的音乐（推荐）：</div>
+    <div class="music-item" onclick="document.getElementById('musicFileInput').click()">
+      <span class="music-item-name">+ 上传 MP3 文件</span>
+      <span class="music-item-artist">从本地上传，最稳定</span>
     </div>
-    <div class="music-item" onclick="selectMusic('186057', '告白气球 - 周杰伦')">
-      <span class="music-item-name">告白气球</span><span class="music-item-artist">周杰伦</span>
-    </div>
-    <div class="music-item" onclick="selectMusic('5253881', '起风了 - 买辣椒也用券')">
-      <span class="music-item-name">起风了</span><span class="music-item-artist">买辣椒也用券</span>
-    </div>
-    <div class="music-item" onclick="selectMusic('108308', '青花瓷 - 周杰伦')">
-      <span class="music-item-name">青花瓷</span><span class="music-item-artist">周杰伦</span>
-    </div>
-    <div class="music-item" onclick="selectMusic('447926063', '年少有为 - 李荣浩')">
-      <span class="music-item-name">年少有为</span><span class="music-item-artist">李荣浩</span>
+    <input type="file" id="musicFileInput" accept="audio/mpeg" onchange="uploadMusicFile(event)" style="display:none">
+    <div style="padding:8px 10px;font-size:12px;color:var(--text-muted);border-top:1px solid rgba(255,255,255,0.1)">或输入直链播放：</div>
+    <div class="music-item" onclick="setMusicUrlDirect()">
+      <span class="music-item-name">输入音乐直链</span>
+      <span class="music-item-artist">粘贴 MP3 直链地址</span>
     </div>
   </div>
   <div style="padding:10px;border-top:1px solid rgba(255,255,255,0.1);text-align:center">
-    <a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="font-size:12px;color:var(--accent)">或手动输入歌曲ID</a>
+    <a href="#" onclick="hideMusicSearch();setMusicUrlDirect()" style="font-size:12px;color:var(--accent)">或输入 MP3 直链</a>
   </div>
 </div>
 </body>
