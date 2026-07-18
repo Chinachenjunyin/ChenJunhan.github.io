@@ -2312,7 +2312,8 @@ function showMusicBar() {
   var audio = document.getElementById('bgMusic');
   var musicUrl = localStorage.getItem('musicUrl');
   var musicLabel = localStorage.getItem('musicLabel') || '背景音乐';
-  if (!musicUrl) { musicUrl = 'https://music.163.com/song/media/outer/url?id=' + (localStorage.getItem('musicId') || '41655239') + '.mp3'; localStorage.setItem('musicUrl', musicUrl); }
+  if (!musicUrl) return;
+  // always reload when switching songs
   if (audio.getAttribute('data-url') !== musicUrl) {
     audio.src = musicUrl;
     audio.setAttribute('data-url', musicUrl);
@@ -2324,30 +2325,37 @@ function showMusicBar() {
   document.getElementById('musicBar').style.display = 'flex';
   document.getElementById('musicBtn').classList.add('playing');
   localStorage.setItem('musicOn', '1');
-  audio.play().catch(function(){});
+  audio.removeEventListener('timeupdate', mbarUpdate);
   audio.addEventListener('timeupdate', mbarUpdate);
+  var playPromise = audio.play();
+  if (playPromise) {
+    playPromise.catch(function(e) {
+      console.log('Autoplay blocked, waiting for user interaction');
+    });
+  }
 }
 
 async function uploadMusicFile(event) {
   var file = event.target.files[0];
   if (!file) return;
+  if (!localStorage.getItem('token')) { alert('请先登录再上传音乐'); event.target.value = ''; return; }
   var formData = new FormData();
   formData.append('file', file);
   try {
     var resp = await fetch(API + '/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }, body: formData });
     var data = await resp.json();
-    if (resp.ok && data.url) {
+    if (!resp.ok) { alert(data.error || '上传失败'); event.target.value = ''; return; }
+    if (data.url) {
       var label = file.name.replace(/\.(mp3|MP3)$/, '');
       localStorage.setItem('musicUrl', data.url);
       localStorage.setItem('musicId', '');
       localStorage.setItem('musicLabel', label);
       localStorage.setItem('musicOn', '1');
       hideMusicSearch();
-      showMusicBar();
-    } else {
-      alert('上传失败');
+      // small delay to let audio element load
+      setTimeout(function() { showMusicBar(); }, 300);
     }
-  } catch(e) { alert('上传失败'); }
+  } catch(e) { alert('上传出错: ' + e.message); }
   event.target.value = '';
 }
 
