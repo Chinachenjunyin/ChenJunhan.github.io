@@ -2312,7 +2312,27 @@ function showMusicBar() {
   var audio = document.getElementById('bgMusic');
   var musicUrl = localStorage.getItem('musicUrl');
   var musicLabel = localStorage.getItem('musicLabel') || '背景音乐';
+  var musicId = localStorage.getItem('musicId');
+  
+  // NetEase iframe mode (musicId set, no direct URL)
+  if (!musicUrl && musicId) {
+    document.getElementById('musicBar').style.display = 'none';
+    var iframeSrc = '//music.163.com/outchain/player?type=2&id=' + musicId + '&auto=1&height=66';
+    var nIframe = document.getElementById('neteaseIframe');
+    if (nIframe.src !== iframeSrc) {
+      nIframe.src = iframeSrc;
+    }
+    document.getElementById('musicIframe').style.display = 'block';
+    document.getElementById('musicBtn').classList.add('playing');
+    localStorage.setItem('musicOn', '1');
+    document.getElementById('mbarTitle').textContent = musicLabel;
+    return;
+  }
+  
+  // Direct URL mode
   if (!musicUrl) return;
+  document.getElementById('musicIframe').style.display = 'none';
+  document.getElementById('neteaseIframe').src = '';
   // always reload when switching songs
   if (audio.getAttribute('data-url') !== musicUrl) {
     audio.src = musicUrl;
@@ -2364,6 +2384,8 @@ function hideMusicBar() {
   audio.pause();
   audio.removeEventListener('timeupdate', mbarUpdate);
   document.getElementById('musicBar').style.display = 'none';
+  document.getElementById('musicIframe').style.display = 'none';
+  document.getElementById('neteaseIframe').src = '';
   document.getElementById('musicBtn').classList.remove('playing');
   localStorage.setItem('musicOn', '0');
 }
@@ -2508,6 +2530,12 @@ function debugMusic() {
 }
 
 (function() {
+  // auto-load default music if no URL set
+  if (!localStorage.getItem('musicUrl') && !localStorage.getItem('musicId')) {
+    localStorage.setItem('musicId', '4899152');
+    localStorage.setItem('musicLabel', 'Merry Christmas Mr. Lawrence');
+    localStorage.setItem('musicOn', '1');
+  }
   if (localStorage.getItem('musicOn') === '1') {
     document.getElementById('musicBtn').classList.add('playing');
     setTimeout(function() { showMusicBar(); }, 500);
@@ -2534,6 +2562,10 @@ function debugMusic() {
     <input type="range" class="mbar-vol" id="mbarVol" min="0" max="100" value="50" oninput="mbarVolume()">
   </div>
   <button class="mbar-close" onclick="hideMusicBar()">&times;</button>
+</div>
+<div id="musicIframe" style="display:none;position:fixed;bottom:0;left:0;right:0;text-align:center;z-index:9998;pointer-events:none">
+  <iframe id="neteaseIframe" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" style="pointer-events:auto"></iframe>
+  <button onclick="hideMusicBar()" style="pointer-events:auto;position:absolute;top:-8px;right:12px;background:rgba(255,0,0,0.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;line-height:1;cursor:pointer">&times;</button>
 </div>
 <div class="modal-overlay" id="musicOverlay" onclick="hideMusicSearch()" style="display:none"></div>
 <div class="music-panel" id="musicPanel">
